@@ -85,4 +85,4 @@ def main(course_id):
 
 
 if __name__ == '__main__':
-    module_data = main(COURSE_ID)
+    main(COURSE_ID)

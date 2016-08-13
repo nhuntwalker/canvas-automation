@@ -1,4 +1,11 @@
 """Generate directories for Python 401d4 class assignments."""
+
+# Todo
+# for each assignment, check if it requires a url.
+# get the list of submissions for that assignment
+# if the url is a github pull request, use pythongit API to discern clone path
+# clone it or pull it to update if necessary
+
 from __future__ import unicode_literals
 import os
 import re

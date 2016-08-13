@@ -50,6 +50,12 @@ def get_course_student_names(course_id):
             if student['name'] is not 'Test Student']
 
 
+def get_course_module_names(course_id):
+    """Return json information on modules in course specified by course ID."""
+    for module in get_course_attr(course_id, 'modules'):
+        yield module['name']
+
+
 def get_module_assignment_names(items_url):
     """Return json information on modules in course specified by course ID."""
     for item in get_canvas_json(items_url):
@@ -57,11 +63,11 @@ def get_module_assignment_names(items_url):
             yield item['title']
 
 
-def make_dir_path(path, name):
+def make_dirname(name):
     """Return new string with no punctuation and spaces replaced with '-'.."""
     name = re.sub(BAD_CHARS_PAT, '', name)
     name = re.sub('\s+', '-', name)
-    return os.path.join(path, name)
+    return name
 
 
 def make_directory(path):
@@ -72,24 +78,35 @@ def make_directory(path):
         pass
 
 
-def main(course_id):
-    """Create local directory tree for grading assignments."""
+# def all_course_dirs(course_id):
+#     """Create local directory tree for grading assignments."""
+#     student_names = get_course_student_names(course_id)
+#     for module in get_course_modules(course_id):
+#         module_path = make_dir_path(ROOT, module['name'])
+#         yield module_path
+
+#         for asgn_name in get_module_assignment_names(module['items_url']):
+#             asgn_path = make_dir_path(module_path, asgn_name)
+#             yield asgn_path
+
+#             for stu_name in student_names:
+#                 stu_path = make_dir_path(asgn_path, stu_name)
+#                 yield stu_path
+
+
+def all_course_combos(course_id):
+    """Generate all combinations of module, assignment, student."""
     student_names = get_course_student_names(course_id)
     for module in get_course_modules(course_id):
-        module_path = make_dir_path(ROOT, module['name'])
-        print('Making module dir: {}'.format(module_path))
-        make_directory(module_path)
+        module_name = module['name']
+        yield module_name, '', ''
 
         for asgn_name in get_module_assignment_names(module['items_url']):
-            asgn_path = make_dir_path(module_path, asgn_name)
-            print('\tMaking assignment dir: {}'.format(asgn_path))
-            make_directory(asgn_path)
+            yield module_name, asgn_name, ''
 
             for stu_name in student_names:
-                stu_path = make_dir_path(asgn_path, stu_name)
-                print('\t\tMaking student dir: {}'.format(stu_path))
-                make_directory(stu_path)
+                yield module_name, asgn_name, stu_name
 
 
 if __name__ == '__main__':
-    main(COURSE_ID)
+    pass

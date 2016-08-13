@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import os
 import re
 import requests
-from itertools import product
 from string import punctuation
 
 TOKEN = os.environ['API_TOKEN']
@@ -37,14 +36,14 @@ def get_course_students(course_id):
 
 def get_course_student_names(course_id):
     """Return json information on students in course specified by course ID."""
-    for student in get_course_students(course_id):
-        yield student['name']
+    return [student['name'] for student in get_course_students(course_id)]
 
 
-def get_course_module_names(course_id):
+def get_module_assignment_names(items_url):
     """Return json information on modules in course specified by course ID."""
-    for module in get_course_modules(course_id):
-        yield module['name']
+    for item in get_canvas_json(items_url):
+        if item['type'] == 'Assignment':
+            yield item['title']
 
 
 def convert_to_dirname(name):
@@ -53,11 +52,21 @@ def convert_to_dirname(name):
     return re.sub('\s+', '-', name)
 
 
+def main(course_id):
+    """Create local directory tree for grading assignments."""
+    student_names = get_course_student_names(course_id)
+    for module in get_course_modules(course_id):
+        module_name = convert_to_dirname(module['name'])
+        print('Making module dir named {}'.format(module_name))
+
+        for asgn_name in get_module_assignment_names(module['items_url']):
+            asgn_name = convert_to_dirname(asgn_name)
+            print('\tMaking assignment dir named {}'.format(asgn_name))
+
+            for stu_name in student_names:
+                stu_name = convert_to_dirname(stu_name)
+                print('\t\tMaking student dir named {}'.format(stu_name))
+
 
 if __name__ == '__main__':
-    s_names = get_course_student_names(COURSE_ID)
-    m_names = get_course_module_names(COURSE_ID)
-    for student, module in product(s_names, m_names):
-        student = convert_to_dirname(student)
-        module = convert_to_dirname(module)
-        print(' '.join((student, module)))
+    module_data = main(COURSE_ID)

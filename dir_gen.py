@@ -35,78 +35,71 @@ def get_course_attr(course_id, attr):
 
 
 def get_course_modules(course_id):
-    """Return json information on modules in course specified by course ID."""
+    """."""
     return get_course_attr(course_id, 'modules')
 
 
 def get_course_students(course_id):
-    """Return json information on students in course specified by course ID."""
+    """."""
     return get_course_attr(course_id, 'students')
 
 
 def get_course_student_names(course_id):
-    """Return json information on students in course specified by course ID."""
+    """."""
     return [student['name'] for student in get_course_students(course_id)
             if student['name'] is not 'Test Student']
 
 
 def get_course_module_names(course_id):
-    """Return json information on modules in course specified by course ID."""
+    """."""
     for module in get_course_attr(course_id, 'modules'):
         yield module['name']
 
 
-def get_module_assignment_names(items_url):
-    """Return json information on modules in course specified by course ID."""
-    for item in get_canvas_json(items_url):
+def get_module_assignment_names(module):
+    """."""
+    for item in get_canvas_json(module['items_url']):
         if item['type'] == 'Assignment':
             yield item['title']
+
+
+def get_module_assignments(module):
+    """."""
+    for item in get_canvas_json(module['items_url']):
+        if item['type'] == 'Assignment':
+            yield item
 
 
 def make_dirname(name):
     """Return new string with no punctuation and spaces replaced with '-'.."""
     name = re.sub(BAD_CHARS_PAT, '', name)
-    name = re.sub('\s+', '-', name)
-    return name
+    return re.sub('\s+', '-', name)
 
 
 def make_directory(path):
-    """Create a new directory with the given dirname."""
+    """Create a new directory with the given path."""
     try:
         os.mkdir(path)
     except IOError:
         pass
 
 
-# def all_course_dirs(course_id):
-#     """Create local directory tree for grading assignments."""
-#     student_names = get_course_student_names(course_id)
-#     for module in get_course_modules(course_id):
-#         module_path = make_dir_path(ROOT, module['name'])
-#         yield module_path
-
-#         for asgn_name in get_module_assignment_names(module['items_url']):
-#             asgn_path = make_dir_path(module_path, asgn_name)
-#             yield asgn_path
-
-#             for stu_name in student_names:
-#                 stu_path = make_dir_path(asgn_path, stu_name)
-#                 yield stu_path
-
-
 def all_course_combos(course_id):
-    """Generate all combinations of module, assignment, student."""
-    student_names = get_course_student_names(course_id)
+    """Generate all combinations of module, assignment, student names."""
+    students = get_course_students(course_id)
     for module in get_course_modules(course_id):
-        module_name = module['name']
-        yield module_name, '', ''
+        yield module, {}, {}
 
-        for asgn_name in get_module_assignment_names(module['items_url']):
-            yield module_name, asgn_name, ''
+        for asgn in get_module_assignments(module):
+            yield module, asgn, {}
 
-            for stu_name in student_names:
-                yield module_name, asgn_name, stu_name
+            for student in students:
+                yield module, asgn, student
 
 
 if __name__ == '__main__':
-    pass
+    for module, asgn, stu in all_course_combos(COURSE_ID):
+        names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
+        names = (make_dirname(name) for name in names)
+        path = os.path.join(ROOT, *names)
+        make_directory(path)

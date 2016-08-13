@@ -13,7 +13,7 @@ import requests
 from string import punctuation
 
 HERE = os.path.dirname(__file__)
-ROOT = os.path.join(HERE, 'grading')
+ROOT_NAME = 'grading'
 
 TOKEN = os.environ['API_TOKEN']
 COURSE_ID = os.environ['COURSE_ID']
@@ -22,58 +22,50 @@ AUTH_PARAMS = {'access_token': TOKEN}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 
 
-def get_canvas_json(path):
+def api_request(path):
     """Return json information from specified API query."""
     response = requests.get(path, params=AUTH_PARAMS)
     return response.json()
 
 
-def get_course_attr(course_id, attr):
+# def get_course_attr(course_id, attr):
+#     """Return JSON from a sub-attribute of a given course."""
+#     path = '/'.join((COURSES_ROOT, course_id, attr, ''))
+#     return api_request(path)
+
+
+def joined_api_request(*args):
     """Return JSON from a sub-attribute of a given course."""
-    path = '/'.join((COURSES_ROOT, course_id, attr, ''))
-    return get_canvas_json(path)
+    path = '/'.join(args + ('', ))
+    return api_request(path)
 
 
 def get_course_modules(course_id):
-    """."""
-    return get_course_attr(course_id, 'modules')
+    """Return modules of a given course."""
+    return joined_api_request(COURSES_ROOT, course_id, 'modules')
 
 
 def get_course_students(course_id):
     """."""
-    return get_course_attr(course_id, 'students')
-
-
-def get_course_student_names(course_id):
-    """."""
-    return [student['name'] for student in get_course_students(course_id)
-            if student['name'] is not 'Test Student']
-
-
-def get_course_module_names(course_id):
-    """."""
-    for module in get_course_attr(course_id, 'modules'):
-        yield module['name']
-
-
-def get_module_assignment_names(module):
-    """."""
-    for item in get_canvas_json(module['items_url']):
-        if item['type'] == 'Assignment':
-            yield item['title']
+    return joined_api_request(COURSES_ROOT, course_id, 'students')
 
 
 def get_module_assignments(module):
     """."""
-    for item in get_canvas_json(module['items_url']):
-        if item['type'] == 'Assignment':
-            yield item
+    return [item for item in api_request(module['items_url'])
+            if item['type'] == 'Assignment']
+
+
+def get_assignment_submissions(asgn):
+    """."""
+    return joined_api_request(asgn['url'], 'submissions')
 
 
 def make_dirname(name):
     """Return new string with no punctuation and spaces replaced with '-'.."""
     name = re.sub(BAD_CHARS_PAT, '', name)
-    return re.sub('\s+', '-', name)
+    name = re.sub('\s+', '-', name)
+    return name.lower()
 
 
 def make_directory(path):
@@ -94,12 +86,22 @@ def all_course_combos(course_id):
             yield module, asgn, {}
 
             for student in students:
+                if student['name'] == 'Test Student':
+                    continue
                 yield module, asgn, student
 
 
 if __name__ == '__main__':
+    modules = get_course_modules(COURSE_ID)
+
+    root = os.path.join(HERE, ROOT_NAME)
+    make_directory(root)
+
     for module, asgn, stu in all_course_combos(COURSE_ID):
+
         names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
         names = (make_dirname(name) for name in names)
-        path = os.path.join(ROOT, *names)
+        path = os.path.join(root, *names)
         make_directory(path)
+
+        # submissions = get_assignment_submissions(asgn)

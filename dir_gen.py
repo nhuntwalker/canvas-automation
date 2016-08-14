@@ -11,9 +11,10 @@ import os
 import re
 import git
 import requests
+from subprocess import check_output, CalledProcessError
 from string import punctuation
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.abspath(os.path.dirname(__file__))
 ROOT_NAME = 'grading'
 
 TOKEN = os.environ['API_TOKEN']
@@ -78,7 +79,7 @@ def get_assignment_student_submission(asgn, student):
             url = asgn['submissions_download_url'].split('?')[0]
             return joined_api_request(url, str(student['id']))
         except KeyError:
-            return []
+            return {}
 
 
 def make_dirname(name):
@@ -94,6 +95,19 @@ def make_directory(path):
         os.mkdir(path)
     except IOError:
         pass
+
+
+def git_grading_branch(submission, path):
+    """Clone student repo, fetch submitted pull request into grading branch."""
+    repo_url, pull_num = sub['url'].split('/pull/')
+    refspec = '/'.join(('pull', pull_num, 'head')) + ':grading'
+    check_output(['cd', path])
+    try:
+        check_output(['git', 'rev-parse'])
+    except CalledProcessError:
+        check_output(['git', 'clone', repo_url + '.git', path])
+    check_output(['git', 'fetch', 'origin', refspec])
+    check_output(['git', 'checkout', 'grading'])
 
 
 def all_course_combos(course_id):
@@ -122,8 +136,13 @@ if __name__ == '__main__':
         names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
         names = (make_dirname(name) for name in names)
         path = os.path.join(root, *names)
-        # make_directory(path)
+        make_directory(path)
+        # import pdb;pdb.set_trace()
 
-        sub = get_assignment_student_submission(asgn, stu)
-        if sub['submission_type'] == 'online_url' and 'github' in sub['url']:
-            pass
+        # Debugging
+        if asgn.get('title') == 'Mathematical Series':
+            sub = get_assignment_student_submission(asgn, stu)
+            if sub.get('submission_type') == 'online_url' and 'github' in sub['url']:
+                print("{}'s submission: {}".format(stu['name'], sub['url']))
+                print('path: {}'.format(path))
+                git_grading_branch(sub, path)

@@ -11,7 +11,7 @@ import os
 import re
 import git
 import requests
-from subprocess import check_output, CalledProcessError
+from subprocess import call, CalledProcessError
 from string import punctuation
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -99,15 +99,16 @@ def make_directory(path):
 
 def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
-    repo_url, pull_num = sub['url'].split('/pull/')
-    refspec = '/'.join(('pull', pull_num, 'head')) + ':grading'
-    check_output(['cd', path])
     try:
-        check_output(['git', 'rev-parse'])
-    except CalledProcessError:
-        check_output(['git', 'clone', repo_url + '.git', path])
-    check_output(['git', 'fetch', 'origin', refspec])
-    check_output(['git', 'checkout', 'grading'])
+        # Need to handle case where student submitted an entire repo, not PR
+        # handle case where there is a commit hash in submitted url
+        repo_url, pull_num = sub['url'].split('/pull/')
+    except ValueError:
+        return
+    refspec = '/'.join(('pull', pull_num, 'head')) + ':grading'
+    call(['git', 'clone', repo_url + '.git', path], cwd=path)
+    call(['git', 'fetch', 'origin', refspec], cwd=path)
+    call(['git', 'checkout', 'grading'], cwd=path)
 
 
 def all_course_combos(course_id):

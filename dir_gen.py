@@ -9,6 +9,7 @@
 from __future__ import unicode_literals
 import os
 import re
+import git
 import requests
 from string import punctuation
 
@@ -123,4 +124,6 @@ if __name__ == '__main__':
         path = os.path.join(root, *names)
         # make_directory(path)
 
-        submission = get_assignment_student_submission(asgn, stu)
+        sub = get_assignment_student_submission(asgn, stu)
+        if sub['submission_type'] == 'online_url' and 'github' in sub['url']:
+            pass

@@ -101,20 +101,24 @@ def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = sub['url']
     try:
-        # handle case where there is a commit hash in submitted url
         repo_url, pull_num = repo_url.split('/pull/')
-        refspec = '/'.join(('pull', pull_num, 'head'))
-    except ValueError:
-        pass
-    for pathspec in ('/tree/', '/blob/'):
         try:
-            repo_url, _ = repo_url.split(pathspec)
+            pull_num, _ = pull_num.split('/commits/')
         except ValueError:
             pass
-        finally:
-            refspec = 'master'
+        refspec = '/'.join(('pull', pull_num, 'head'))
+    except ValueError:
+        for pathspec in ('/tree/', '/blob/'):
+            try:
+                repo_url, _ = repo_url.split(pathspec)
+            except ValueError:
+                pass
+            finally:
+                refspec = 'master'
 
     repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
+    print('cloning from {}'.format(repo_url))
+    print('fetching from refspec {}'.format(refspec))
 
     call(['git', 'clone', repo_url, path], cwd=path)
     call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
@@ -148,11 +152,10 @@ if __name__ == '__main__':
         names = (make_dirname(name) for name in names)
         path = os.path.join(root, *names)
         make_directory(path)
-        # import pdb;pdb.set_trace()
 
         # Debugging
         if asgn.get('title') == 'Mathematical Series':
             sub = get_assignment_student_submission(asgn, stu)
             if sub.get('submission_type') == 'online_url' and 'github' in sub['url']:
-                print("{}'s submission: {}\n".format(stu['name'], sub['url']))
+                print("\n{}'s submission: {}".format(stu['name'], sub['url']))
                 git_grading_branch(sub, path)

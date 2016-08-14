@@ -1,4 +1,11 @@
 """Generate directories for Python 401d4 class assignments."""
+
+# Todo
+# for each assignment, check if it requires a url.
+# get the list of submissions for that assignment
+# if the url is a github pull request, use pythongit API to discern clone path
+# clone it or pull it to update if necessary
+
 from __future__ import unicode_literals
 import os
 import re
@@ -6,7 +13,7 @@ import requests
 from string import punctuation
 
 HERE = os.path.dirname(__file__)
-ROOT = os.path.join(HERE, 'grading')
+ROOT_NAME = 'grading'
 
 TOKEN = os.environ['API_TOKEN']
 COURSE_ID = os.environ['COURSE_ID']
@@ -15,74 +22,105 @@ AUTH_PARAMS = {'access_token': TOKEN}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 
 
-def get_canvas_json(path):
+def api_request(url):
     """Return json information from specified API query."""
-    response = requests.get(path, params=AUTH_PARAMS)
+    response = requests.get(url, params=AUTH_PARAMS)
     return response.json()
 
 
-def get_course_attr(course_id, attr):
+# def get_course_attr(course_id, attr):
+#     """Return JSON from a sub-attribute of a given course."""
+#     path = '/'.join((COURSES_ROOT, course_id, attr, ''))
+#     return api_request(path)
+
+
+def joined_api_request(*args):
     """Return JSON from a sub-attribute of a given course."""
-    path = '/'.join((COURSES_ROOT, course_id, attr, ''))
-    return get_canvas_json(path)
+    url = '/'.join(args + ('', ))
+    return api_request(url)
 
 
 def get_course_modules(course_id):
-    """Return json information on modules in course specified by course ID."""
-    return get_course_attr(course_id, 'modules')
+    """Return modules of a given course."""
+    return joined_api_request(COURSES_ROOT, course_id, 'modules')
 
 
 def get_course_students(course_id):
-    """Return json information on students in course specified by course ID."""
-    return get_course_attr(course_id, 'students')
+    """."""
+    return joined_api_request(COURSES_ROOT, course_id, 'students')
 
 
-def get_course_student_names(course_id):
-    """Return json information on students in course specified by course ID."""
-    return [student['name'] for student in get_course_students(course_id)
-            if student['name'] is not 'Test Student']
+def get_module_assignments(module):
+    """."""
+    return [item for item in api_request(module['items_url'])
+            if item['type'] == 'Assignment']
 
 
-def get_module_assignment_names(items_url):
-    """Return json information on modules in course specified by course ID."""
-    for item in get_canvas_json(items_url):
-        if item['type'] == 'Assignment':
-            yield item['title']
+# def get_assignment_submissions(asgn):
+#     """."""
+#     try:
+#         return joined_api_request(asgn['url'], 'submissions')
+#     except KeyError:
+#         try:
+#             url = asgn['submissions_download_url'].split('?')[0]
+#             return api_request(url)
+#         except KeyError:
+#             return []
 
 
-def make_dir_path(path, name):
+def get_assignment_student_submission(asgn, student):
+    """."""
+    try:
+        return joined_api_request(asgn['url'], 'submissions', str(student['id']))
+    except KeyError:
+        try:
+            url = asgn['submissions_download_url'].split('?')[0]
+            return joined_api_request(url, str(student['id']))
+        except KeyError:
+            return []
+
+
+def make_dirname(name):
     """Return new string with no punctuation and spaces replaced with '-'.."""
     name = re.sub(BAD_CHARS_PAT, '', name)
     name = re.sub('\s+', '-', name)
-    return os.path.join(path, name)
+    return name.lower()
 
 
 def make_directory(path):
-    """Create a new directory with the given dirname."""
+    """Create a new directory with the given path."""
     try:
         os.mkdir(path)
     except IOError:
         pass
 
 
-def main(course_id):
-    """Create local directory tree for grading assignments."""
-    student_names = get_course_student_names(course_id)
+def all_course_combos(course_id):
+    """Generate all combinations of module, assignment, student names."""
+    students = get_course_students(course_id)
     for module in get_course_modules(course_id):
-        module_path = make_dir_path(ROOT, module['name'])
-        print('Making module dir: {}'.format(module_path))
-        make_directory(module_path)
+        yield module, {}, {}
 
-        for asgn_name in get_module_assignment_names(module['items_url']):
-            asgn_path = make_dir_path(module_path, asgn_name)
-            print('\tMaking assignment dir: {}'.format(asgn_path))
-            make_directory(asgn_path)
+        for asgn in get_module_assignments(module):
+            yield module, asgn, {}
 
-            for stu_name in student_names:
-                stu_path = make_dir_path(asgn_path, stu_name)
-                print('\t\tMaking student dir: {}'.format(stu_path))
-                make_directory(stu_path)
+            for student in students:
+                if student['name'] == 'Test Student':
+                    continue
+                yield module, asgn, student
 
 
 if __name__ == '__main__':
-    main(COURSE_ID)
+    modules = get_course_modules(COURSE_ID)
+
+    root = os.path.join(HERE, ROOT_NAME)
+    make_directory(root)
+
+    for module, asgn, stu in all_course_combos(COURSE_ID):
+
+        names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
+        names = (make_dirname(name) for name in names)
+        path = os.path.join(root, *names)
+        # make_directory(path)
+
+        submission = get_assignment_student_submission(asgn, stu)

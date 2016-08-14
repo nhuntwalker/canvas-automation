@@ -22,9 +22,9 @@ AUTH_PARAMS = {'access_token': TOKEN}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 
 
-def api_request(path):
+def api_request(url):
     """Return json information from specified API query."""
-    response = requests.get(path, params=AUTH_PARAMS)
+    response = requests.get(url, params=AUTH_PARAMS)
     return response.json()
 
 
@@ -36,8 +36,8 @@ def api_request(path):
 
 def joined_api_request(*args):
     """Return JSON from a sub-attribute of a given course."""
-    path = '/'.join(args + ('', ))
-    return api_request(path)
+    url = '/'.join(args + ('', ))
+    return api_request(url)
 
 
 def get_course_modules(course_id):
@@ -56,9 +56,28 @@ def get_module_assignments(module):
             if item['type'] == 'Assignment']
 
 
-def get_assignment_submissions(asgn):
+# def get_assignment_submissions(asgn):
+#     """."""
+#     try:
+#         return joined_api_request(asgn['url'], 'submissions')
+#     except KeyError:
+#         try:
+#             url = asgn['submissions_download_url'].split('?')[0]
+#             return api_request(url)
+#         except KeyError:
+#             return []
+
+
+def get_assignment_student_submission(asgn, student):
     """."""
-    return joined_api_request(asgn['url'], 'submissions')
+    try:
+        return joined_api_request(asgn['url'], 'submissions', str(student['id']))
+    except KeyError:
+        try:
+            url = asgn['submissions_download_url'].split('?')[0]
+            return joined_api_request(url, str(student['id']))
+        except KeyError:
+            return []
 
 
 def make_dirname(name):
@@ -102,6 +121,6 @@ if __name__ == '__main__':
         names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
         names = (make_dirname(name) for name in names)
         path = os.path.join(root, *names)
-        make_directory(path)
+        # make_directory(path)
 
-        # submissions = get_assignment_submissions(asgn)
+        submission = get_assignment_student_submission(asgn, stu)

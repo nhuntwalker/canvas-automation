@@ -101,12 +101,9 @@ def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = sub['url']
     try:
-        # Need to handle case where student submitted an entire repo, not PR
-        # /tree
-        # /blob
         # handle case where there is a commit hash in submitted url
         repo_url, pull_num = repo_url.split('/pull/')
-        refspec = '/'.join(('pull', pull_num, 'head')) + ':grading'
+        refspec = '/'.join(('pull', pull_num, 'head'))
     except ValueError:
         pass
     for pathspec in ('/tree/', '/blob/'):
@@ -115,11 +112,12 @@ def git_grading_branch(submission, path):
         except ValueError:
             pass
         finally:
-            pass
-            # refspec
+            refspec = 'master'
 
-    call(['git', 'clone', repo_url + '.git', path], cwd=path)
-    call(['git', 'fetch', 'origin', refspec], cwd=path)
+    repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
+
+    call(['git', 'clone', repo_url, path], cwd=path)
+    call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
     call(['git', 'checkout', 'grading'], cwd=path)
 
 

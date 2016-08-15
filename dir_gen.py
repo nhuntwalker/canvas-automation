@@ -22,6 +22,7 @@ COURSE_ID = os.environ['COURSE_ID']
 COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
 AUTH_PARAMS = {'access_token': TOKEN}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
+GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 
 
 def api_request(url):
@@ -153,11 +154,12 @@ if __name__ == '__main__':
         path = os.path.join(root, *names)
         make_directory(path)
 
-        # possible to get all submissions for assignment? faster?
+        if not all((module, asgn, stu)):
+            continue
+
+        # possible to get all submissions for assignment + student names? faster?
         sub = get_assignment_student_submission(asgn, stu)
-        if sub.get('submission_type') == 'online_url' and 'github' in sub['url']:
+
+        if sub['submission_type'] == 'online_url' and GITHUB_REPO_PAT.match(sub['url']):
             print("\n{}'s submission: {}".format(stu['name'], sub['url']))
-            try:
-                git_grading_branch(sub, path)
-            except OSError as e:
-                print('Error getting git branch: {}'.format(e))
+            git_grading_branch(sub, path)

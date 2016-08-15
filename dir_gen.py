@@ -1,10 +1,16 @@
 """Generate directories for Python 401d4 class assignments."""
 
+
+# Some Assignments not showing up!!
+# e.g. Mailroom Madness, Tom Swift
+
+# git fetch is not updating an open pull request when it is updated
+# need to git pull from that branch as well?
+
 # Todo
-# for each assignment, check if it requires a url.
 # get the list of submissions for that assignment
-# if the url is a github pull request, use pythongit API to discern clone path
-# clone it or pull it to update if necessary
+# also check if submission type is a .py file; download that
+
 
 from __future__ import unicode_literals
 import os
@@ -149,9 +155,10 @@ if __name__ == '__main__':
 
     for module, asgn, stu in all_course_combos(COURSE_ID):
 
+        # Refactor this block into a function
         names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
-        names = (make_dirname(name) for name in names)
-        path = os.path.join(root, *names)
+        dirnames = (make_dirname(name) for name in names)
+        path = os.path.join(root, *dirnames)
         make_directory(path)
 
         if not all((module, asgn, stu)):
@@ -159,6 +166,8 @@ if __name__ == '__main__':
 
         # possible to get all submissions for assignment + student names? faster?
         sub = get_assignment_student_submission(asgn, stu)
+
+        print('{} - {} - {}'.format(*names))
 
         if sub['submission_type'] == 'online_url' and GITHUB_REPO_PAT.match(sub['url']):
             print("\n{}'s submission: {}".format(stu['name'], sub['url']))

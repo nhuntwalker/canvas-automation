@@ -153,9 +153,11 @@ if __name__ == '__main__':
         path = os.path.join(root, *names)
         make_directory(path)
 
-        # Debugging
-        if asgn.get('title') == 'Mathematical Series':
-            sub = get_assignment_student_submission(asgn, stu)
-            if sub.get('submission_type') == 'online_url' and 'github' in sub['url']:
-                print("\n{}'s submission: {}".format(stu['name'], sub['url']))
+        # possible to get all submissions for assignment? faster?
+        sub = get_assignment_student_submission(asgn, stu)
+        if sub.get('submission_type') == 'online_url' and 'github' in sub['url']:
+            print("\n{}'s submission: {}".format(stu['name'], sub['url']))
+            try:
                 git_grading_branch(sub, path)
+            except OSError as e:
+                print('Error getting git branch: {}'.format(e))

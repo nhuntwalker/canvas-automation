@@ -26,14 +26,16 @@ ROOT_NAME = 'grading'
 TOKEN = os.environ['API_TOKEN']
 COURSE_ID = os.environ['COURSE_ID']
 COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
-AUTH_PARAMS = {'access_token': TOKEN}
+DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 
 
-def api_request(url):
+def api_request(url, **kwargs):
     """Return json information from specified API query."""
-    response = requests.get(url, params=AUTH_PARAMS)
+    params = DEFAULT_PARAMS.copy()
+    params.update(kwargs)
+    response = requests.get(url, params=params)
     return response.json()
 
 
@@ -43,10 +45,10 @@ def api_request(url):
 #     return api_request(path)
 
 
-def joined_api_request(*args):
+def joined_api_request(*args, **kwargs):
     """Return JSON from a sub-attribute of a given course."""
     url = '/'.join(args + ('', ))
-    return api_request(url)
+    return api_request(url, **kwargs)
 
 
 def get_course_modules(course_id):
@@ -62,19 +64,20 @@ def get_course_students(course_id):
 def get_module_assignments(module):
     """."""
     return [item for item in api_request(module['items_url'])
-            if item['type'] == 'Assignment']
+            if item['type'] == 'Assignment'
+            ]
 
 
-# def get_assignment_submissions(asgn):
-#     """."""
-#     try:
-#         return joined_api_request(asgn['url'], 'submissions')
-#     except KeyError:
-#         try:
-#             url = asgn['submissions_download_url'].split('?')[0]
-#             return api_request(url)
-#         except KeyError:
-#             return []
+def get_assignment_submissions(asgn):
+    """."""
+    try:
+        return joined_api_request(asgn['url'], 'submissions', include='user')
+    except KeyError:
+        try:
+            url = asgn['submissions_download_url'].split('?')[0]
+            return api_request(url, include='user')
+        except KeyError:
+            return []
 
 
 def get_assignment_student_submission(asgn, student):
@@ -134,17 +137,15 @@ def git_grading_branch(submission, path):
 
 def all_course_combos(course_id):
     """Generate all combinations of module, assignment, student names."""
-    students = get_course_students(course_id)
     for module in get_course_modules(course_id):
-        yield module, {}, {}
+        yield module, {}, {}, {}
 
         for asgn in get_module_assignments(module):
-            yield module, asgn, {}
+            yield module, asgn, {}, {}
 
-            for student in students:
-                if student['name'] == 'Test Student':
-                    continue
-                yield module, asgn, student
+            for sub in get_assignment_submissions(asgn):
+                student = sub['user']
+                yield module, asgn, student, sub
 
 
 if __name__ == '__main__':
@@ -153,7 +154,7 @@ if __name__ == '__main__':
     root = os.path.join(HERE, ROOT_NAME)
     make_directory(root)
 
-    for module, asgn, stu in all_course_combos(COURSE_ID):
+    for module, asgn, stu, sub in all_course_combos(COURSE_ID):
 
         # Refactor this block into a function
         names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
@@ -161,13 +162,14 @@ if __name__ == '__main__':
         path = os.path.join(root, *dirnames)
         make_directory(path)
 
-        if not all((module, asgn, stu)):
+        if not all((module, asgn, stu, sub)):
             continue
 
-        # possible to get all submissions for assignment + student names? faster?
-        sub = get_assignment_student_submission(asgn, stu)
+        print('\n{} - {} - {}'.format(*names))
 
-        print('{} - {} - {}'.format(*names))
+        # possible to get all submissions for assignment + student names? faster?
+        # get_assignment submissions --> submission['user']['name']
+        # sub = get_assignment_student_submission(asgn, stu)
 
         if sub['submission_type'] == 'online_url' and GITHUB_REPO_PAT.match(sub['url']):
             print("\n{}'s submission: {}".format(stu['name'], sub['url']))

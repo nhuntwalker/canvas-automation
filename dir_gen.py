@@ -104,7 +104,7 @@ def make_directory(path):
     """Create a new directory with the given path."""
     try:
         os.mkdir(path)
-    except IOError:
+    except (IOError, OSError):
         pass
 
 

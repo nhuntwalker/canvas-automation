@@ -19,6 +19,7 @@ ROOT_NAME = 'grading'
 
 TOKEN = os.environ['API_TOKEN']
 COURSE_ID = os.environ['COURSE_ID']
+API_ROOT = 'https://canvas.instructure.com/api/v1/'
 COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
@@ -118,8 +119,8 @@ def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = sub['url']
     try:
-        repo_url, pull_num = repo_url.split('/pull/')
-        pull_num = pull_num.split('/')[0]
+        repo_url, pull_info = repo_url.split('/pull/')
+        pull_num = pull_info.split('/')[0]
         refspec = '/'.join(('pull', pull_num, 'head'))
     except ValueError:
         # may be able to use /tree/ or /blob/ as refspecs instead of master

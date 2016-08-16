@@ -2,11 +2,7 @@
 
 # Change to dir structure: student/assignment
 
-# git fetch is not updating an open pull request when it is updated
-# need to git pull from that branch as well?
-
 # Todo
-# get the list of submissions for that assignment
 # also check if submission type is a .py file; download that
 
 
@@ -25,7 +21,7 @@ COURSE_ID = os.environ['COURSE_ID']
 COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
-REPO = re.compile(r'https://github.com/.+/.+')
+GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 
 
 def api_request(url, **kwargs):
@@ -112,7 +108,7 @@ def is_git_repo(submission):
     """Determine if the given submission is a git repository."""
     return (
         submission['submission_type'] == 'online_url' and
-        re.match(REPO, submission['url']) and
+        re.match(GITHUB_REPO_PAT, submission['url']) and
         'profile' not in submission['url']
     )
 
@@ -132,7 +128,7 @@ def git_grading_branch(submission, path):
     repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
     print('cloning from {}'.format(repo_url))
     call(['git', 'clone', repo_url, path], cwd=path)
-    print('fetching from refspec {}'.format(refspec))
+    print('fetching from refspec: {}'.format(refspec))
     call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
     call(['git', 'checkout', 'grading'], cwd=path)
     call(['git', 'pull', 'origin', refspec], cwd=path)

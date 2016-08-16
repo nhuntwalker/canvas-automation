@@ -1,10 +1,11 @@
 """Generate directories for Python 401d4 class assignments."""
 
-# Change to dir structure: student/assignment
 
 # Todo
-# also check if submission type is a .py file; download that
-
+# check if submission type is a .py or other type of file; download that
+# Change to dir structure: student/assignment
+# make dir structure an command line option, along with course ID, token, etc
+# may be able to use /tree/ or /blob/ as refspecs instead of master
 
 from __future__ import unicode_literals
 import os
@@ -85,8 +86,8 @@ def make_dirname(name):
     return name.lower()
 
 
-def make_path(root, module, assignment, student):
-    """Create a path from the given components."""
+def make_dir_path(root, module, assignment, student):
+    """Create a directory path from the given components."""
     names = (
         module.get('name', ''),
         assignment.get('title', ''),
@@ -121,6 +122,7 @@ def git_grading_branch(submission, path):
         pull_num = pull_num.split('/')[0]
         refspec = '/'.join(('pull', pull_num, 'head'))
     except ValueError:
+        # may be able to use /tree/ or /blob/ as refspecs instead of master
         for pathspec in ('/tree/', '/blob/'):
             repo_url = repo_url.split(pathspec)[0]
         refspec = 'master'
@@ -131,6 +133,7 @@ def git_grading_branch(submission, path):
     print('fetching from refspec: {}'.format(refspec))
     call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
     call(['git', 'checkout', 'grading'], cwd=path)
+    print('pulling from refspec: {}'.format(refspec))
     call(['git', 'pull', 'origin', refspec], cwd=path)
 
 
@@ -153,7 +156,7 @@ if __name__ == '__main__':
     make_directory(root)
 
     for module, asgn, stu, sub in all_course_combos(COURSE_ID):
-        path = make_path(root, module, asgn, stu)
+        path = make_dir_path(root, module, asgn, stu)
         make_directory(path)
 
         if not all((module, asgn, stu, sub)):

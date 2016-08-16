@@ -148,7 +148,6 @@ def all_course_combos(course_id):
 
 
 if __name__ == '__main__':
-    modules = get_course_modules(COURSE_ID)
 
     root = os.path.join(HERE, ROOT_NAME)
     make_directory(root)
@@ -163,5 +162,7 @@ if __name__ == '__main__':
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['title'], sub['url'])
         )
+
+        # download .py or other files
         if is_git_repo(sub):
             git_grading_branch(sub, path)

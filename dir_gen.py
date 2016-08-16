@@ -108,6 +108,15 @@ def make_directory(path):
         pass
 
 
+def is_git_repo(submission):
+    """Determine if the given submission is a git repository."""
+    return (
+        submission['submission_type'] == 'online_url' and
+        re.match(REPO, submission['url']) and
+        'profile' not in submission['url']
+    )
+
+
 def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = sub['url']
@@ -122,11 +131,11 @@ def git_grading_branch(submission, path):
 
     repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
     print('cloning from {}'.format(repo_url))
-    print('fetching from refspec {}'.format(refspec))
-
     call(['git', 'clone', repo_url, path], cwd=path)
+    print('fetching from refspec {}'.format(refspec))
     call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
     call(['git', 'checkout', 'grading'], cwd=path)
+    call(['git', 'pull', 'origin', refspec], cwd=path)
 
 
 def all_course_combos(course_id):
@@ -155,6 +164,8 @@ if __name__ == '__main__':
         if not all((module, asgn, stu, sub)):
             continue
 
-        if sub['submission_type'] == 'online_url' and re.match(REPO, sub['url']):
-            print("\n{}'s submission: {}".format(stu['name'], sub['url']))
+        print("\n{}'s submission for {}: {}".format(
+            stu['name'], asgn['title'], sub['url'])
+        )
+        if is_git_repo(sub):
             git_grading_branch(sub, path)

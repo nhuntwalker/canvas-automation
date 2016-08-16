@@ -1,6 +1,8 @@
 """Generate directories for Python 401d4 class assignments."""
 
 
+# Change to dir structure: student/assignment
+
 # Some Assignments not showing up!!
 # e.g. Mailroom Madness, Tom Swift
 

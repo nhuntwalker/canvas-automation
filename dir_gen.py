@@ -1,10 +1,6 @@
 """Generate directories for Python 401d4 class assignments."""
 
-
 # Change to dir structure: student/assignment
-
-# Some Assignments not showing up!!
-# e.g. Mailroom Madness, Tom Swift
 
 # git fetch is not updating an open pull request when it is updated
 # need to git pull from that branch as well?
@@ -17,9 +13,8 @@
 from __future__ import unicode_literals
 import os
 import re
-import git
 import requests
-from subprocess import call, CalledProcessError
+from subprocess import call
 from string import punctuation
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -30,7 +25,7 @@ COURSE_ID = os.environ['COURSE_ID']
 COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
-GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
+REPO = re.compile(r'https://github.com/.+/.+')
 
 
 def api_request(url, **kwargs):
@@ -41,12 +36,6 @@ def api_request(url, **kwargs):
     return response.json()
 
 
-# def get_course_attr(course_id, attr):
-#     """Return JSON from a sub-attribute of a given course."""
-#     path = '/'.join((COURSES_ROOT, course_id, attr, ''))
-#     return api_request(path)
-
-
 def joined_api_request(*args, **kwargs):
     """Return JSON from a sub-attribute of a given course."""
     url = '/'.join(args + ('', ))
@@ -54,24 +43,23 @@ def joined_api_request(*args, **kwargs):
 
 
 def get_course_modules(course_id):
-    """Return modules of a given course."""
+    """Return list of modules of the course specified by ID."""
     return joined_api_request(COURSES_ROOT, course_id, 'modules')
 
 
 def get_course_students(course_id):
-    """."""
+    """Return list of student dicts of the course specified by ID."""
     return joined_api_request(COURSES_ROOT, course_id, 'students')
 
 
 def get_module_assignments(module):
-    """."""
+    """Return list of assignment dicts of the specified module."""
     return [item for item in api_request(module['items_url'])
-            if item['type'] == 'Assignment'
-            ]
+            if item['type'] == 'Assignment']
 
 
 def get_assignment_submissions(asgn):
-    """."""
+    """Return list of submission dicts for the specified assignment."""
     try:
         return joined_api_request(asgn['url'], 'submissions', include='user')
     except KeyError:
@@ -83,7 +71,7 @@ def get_assignment_submissions(asgn):
 
 
 def get_assignment_student_submission(asgn, student):
-    """."""
+    """Return single submission dict specified by assignment and student."""
     try:
         return joined_api_request(asgn['url'], 'submissions', str(student['id']))
     except KeyError:
@@ -95,10 +83,21 @@ def get_assignment_student_submission(asgn, student):
 
 
 def make_dirname(name):
-    """Return new string with no punctuation and spaces replaced with '-'.."""
+    """Return new string with no punctuation and spaces replaced with '-'."""
     name = re.sub(BAD_CHARS_PAT, '', name)
     name = re.sub('\s+', '-', name)
     return name.lower()
+
+
+def make_path(root, module, assignment, student):
+    """Create a path from the given components."""
+    names = (
+        module.get('name', ''),
+        assignment.get('title', ''),
+        student.get('name', '')
+    )
+    dirnames = map(make_dirname, names)
+    return os.path.join(root, *dirnames)
 
 
 def make_directory(path):
@@ -114,19 +113,12 @@ def git_grading_branch(submission, path):
     repo_url = sub['url']
     try:
         repo_url, pull_num = repo_url.split('/pull/')
-        try:
-            pull_num, _ = pull_num.split('/commits/')
-        except ValueError:
-            pass
+        pull_num = pull_num.split('/')[0]
         refspec = '/'.join(('pull', pull_num, 'head'))
     except ValueError:
         for pathspec in ('/tree/', '/blob/'):
-            try:
-                repo_url, _ = repo_url.split(pathspec)
-            except ValueError:
-                pass
-            finally:
-                refspec = 'master'
+            repo_url = repo_url.split(pathspec)[0]
+        refspec = 'master'
 
     repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
     print('cloning from {}'.format(repo_url))
@@ -157,22 +149,12 @@ if __name__ == '__main__':
     make_directory(root)
 
     for module, asgn, stu, sub in all_course_combos(COURSE_ID):
-
-        # Refactor this block into a function
-        names = (module['name'], asgn.get('title', ''), stu.get('name', ''))
-        dirnames = (make_dirname(name) for name in names)
-        path = os.path.join(root, *dirnames)
+        path = make_path(root, module, asgn, stu)
         make_directory(path)
 
         if not all((module, asgn, stu, sub)):
             continue
 
-        print('\n{} - {} - {}'.format(*names))
-
-        # possible to get all submissions for assignment + student names? faster?
-        # get_assignment submissions --> submission['user']['name']
-        # sub = get_assignment_student_submission(asgn, stu)
-
-        if sub['submission_type'] == 'online_url' and GITHUB_REPO_PAT.match(sub['url']):
+        if sub['submission_type'] == 'online_url' and re.match(REPO, sub['url']):
             print("\n{}'s submission: {}".format(stu['name'], sub['url']))
             git_grading_branch(sub, path)

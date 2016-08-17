@@ -10,6 +10,7 @@
 from __future__ import unicode_literals
 import os
 import re
+import sys
 import requests
 from subprocess import call
 from string import punctuation
@@ -24,6 +25,8 @@ COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
+DEFAULT_DIR_ORDER = 'mas'
+DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
 
 def api_request(url, **kwargs):
@@ -152,6 +155,11 @@ def all_course_combos(course_id):
 
 
 if __name__ == '__main__':
+
+    try:
+        dir_order = sys.argv[1]
+    except IndexError:
+        dir_order = DEFAULT_DIR_ORDER
 
     root = os.path.join(HERE, ROOT_NAME)
     make_directory(root)

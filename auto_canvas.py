@@ -90,13 +90,15 @@ def make_dirname(name):
     return name.lower()
 
 
-def make_dir_path(root, module, assignment, student):
+def make_dir_path(root, module, assignment, student, dir_order):
     """Create a directory path from the given components."""
-    names = (
-        module.get('name', ''),
-        assignment.get('title', ''),
-        student.get('name', '')
-    )
+    charmap = {
+        'm': module,
+        'a': assignment,
+        's': student,
+    }
+    items = map(lambda char: charmap[char], dir_order)
+    names = map(lambda item: item.get('name', item.get('title', '')), items)
     dirnames = map(make_dirname, names)
     return os.path.join(root, *dirnames)
 
@@ -161,11 +163,15 @@ if __name__ == '__main__':
     except IndexError:
         dir_order = DEFAULT_DIR_ORDER
 
+    if dir_order not in DIR_ORDERS:
+        print('Invalid directory order acronym.')
+        sys.exit()
+
     root = os.path.join(HERE, ROOT_NAME)
     make_directory(root)
 
     for module, asgn, stu, sub in all_course_combos(COURSE_ID):
-        path = make_dir_path(root, module, asgn, stu)
+        path = make_dir_path(root, module, asgn, stu, dir_order)
         make_directory(path)
 
         if not all((module, asgn, stu, sub)):

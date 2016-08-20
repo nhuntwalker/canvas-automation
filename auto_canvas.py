@@ -1,15 +1,14 @@
 """Generate directories for Python 401d4 class assignments."""
 
 
+# BUGFIX:
+# setting multiple "include" params does not work; only returns last item
+
 # Todo
 # set the name of the grading branch to grading-student-name for clarification
 
 # check if submission type is a .py or other type of file; download that
-# Change to dir structure: student/assignment
-# make dir structure an command line option, along with course ID, token, etc
 # may be able to use /tree/ or /blob/ as refspecs instead of master
-
-# API request: return a generator of items across multiple pages to save memory
 
 from __future__ import unicode_literals
 import os
@@ -93,7 +92,8 @@ def get_course_submissions(course_id):
 def get_assignment_submissions(asgn):
     """Return list of submission dicts for the specified assignment."""
     url = asgn.get('url', asgn.get('submissions_download_url', '').split('?')[0])
-    return joined_api_request(url, 'submissions', include='user')
+    for submission in joined_api_request(url, 'submissions', include='user'):
+        yield submission
 
 
 def make_dirname(name):
@@ -170,6 +170,7 @@ def get_git_repo(submission, path):
 def all_course_combos(course_id):
     """Generate all combinations of assignment, student and submission."""
     students_by_id = {stu['id']: stu for stu in get_course_students(course_id)}
+
     for submission in get_course_submissions(course_id):
         assignment = submission['assignment']
         try:

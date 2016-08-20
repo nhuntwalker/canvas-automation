@@ -158,11 +158,13 @@ def get_git_repo(submission, path):
         refspec = 'master'
 
     repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
+    local_branchname = '-'.join(('grading', make_dirname(student['name'])))
+
     print('cloning from {}'.format(repo_url))
     call(['git', 'clone', repo_url, path], cwd=path)
     print('fetching from refspec: {}'.format(refspec))
-    call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
-    call(['git', 'checkout', 'grading'], cwd=path)
+    call(['git', 'fetch', 'origin', ':'.join((refspec, local_branchname))], cwd=path)
+    call(['git', 'checkout', local_branchname], cwd=path)
     print('pulling from refspec: {}'.format(refspec))
     call(['git', 'pull', 'origin', refspec], cwd=path)
 
@@ -207,6 +209,7 @@ if __name__ == '__main__':
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['name'], sub['url'])
         )
+        # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
         get_git_repo(sub, path)

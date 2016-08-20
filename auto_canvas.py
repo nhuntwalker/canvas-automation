@@ -9,6 +9,7 @@
 # make dir structure an command line option, along with course ID, token, etc
 # may be able to use /tree/ or /blob/ as refspecs instead of master
 
+# API request: return a generator of items across multiple pages to save memory
 
 from __future__ import unicode_literals
 import os
@@ -40,7 +41,15 @@ def api_request(url, **kwargs):
     params = DEFAULT_PARAMS.copy()
     params.update(kwargs)
     response = requests.get(url, params=params)
-    return response.json()
+    result = response.json()
+    method = getattr(result, 'update', getattr(result, 'extend'))
+    try:
+        next_url = response.links['next']['url']
+        method(api_request(next_url, **kwargs))
+    except KeyError:
+        pass
+    # import pdb;pdb.set_trace()
+    return result
 
 
 def joined_api_request(*args, **kwargs):
@@ -50,7 +59,7 @@ def joined_api_request(*args, **kwargs):
 
 
 def get_course_modules(course_id):
-    """Return list of modules of the course specified by ID."""
+    """Return list of module dicts of the course specified by ID."""
     return joined_api_request(API_ROOT, 'courses', course_id, 'modules')
 
 
@@ -60,15 +69,29 @@ def get_course_students(course_id):
 
 
 def get_course_assignments(course_id):
-    """Return list of student dicts of the course specified by ID."""
+    """Return list of assignment dicts of the course specified by ID."""
     return joined_api_request(API_ROOT, 'courses', course_id, 'assignments')
 
 
-# possible to re-write without extra loop?
-def get_module_assignments(module):
-    """Return list of assignment dicts of the specified module."""
-    return [item for item in api_request(module['items_url'])
-            if item['type'] == 'Assignment']
+def get_course_submissions(course_id):
+    """Return list of submission dicts of the course specified by ID."""
+    return joined_api_request(
+        API_ROOT,
+        'courses',
+        course_id,
+        'students',
+        'submissions',
+        student_ids='all',
+        include='assignment',
+        # include='user', # WON'T WORK to submit multiple includes!
+    )
+
+
+# # possible to re-write without extra loop?
+# def get_module_assignments(module):
+#     """Return list of assignment dicts of the specified module."""
+#     return [item for item in api_request(module['items_url'])
+#             if item['type'] == 'Assignment']
 
 
 def get_assignment_submissions(asgn):
@@ -83,16 +106,16 @@ def get_assignment_submissions(asgn):
             return []
 
 
-def get_assignment_student_submission(asgn, student):
-    """Return single submission dict specified by assignment and student."""
-    try:
-        return joined_api_request(asgn['url'], 'submissions', str(student['id']))
-    except KeyError:
-        try:
-            url = asgn['submissions_download_url'].split('?')[0]
-            return joined_api_request(url, str(student['id']))
-        except KeyError:
-            return {}
+# def get_assignment_student_submission(asgn, student):
+#     """Return single submission dict specified by assignment and student."""
+#     try:
+#         return joined_api_request(asgn['url'], 'submissions', str(student['id']))
+#     except KeyError:
+#         try:
+#             url = asgn['submissions_download_url'].split('?')[0]
+#             return joined_api_request(url, str(student['id']))
+#         except KeyError:
+#             return {}
 
 
 def make_dirname(name):
@@ -102,10 +125,9 @@ def make_dirname(name):
     return name.lower()
 
 
-def make_dir_path(root, module, assignment, student, dir_order):
+def make_dir_path(root, assignment, student, dir_order):
     """Create a directory path from the given components."""
     charmap = {
-        'm': module,
         'a': assignment,
         's': student,
     }
@@ -168,20 +190,24 @@ def get_git_repo(submission, path):
 
 
 def all_course_combos(course_id):
-    """Generate all combinations of module, assignment, student names."""
-    for module in get_course_modules(course_id):
-        for asgn in get_module_assignments(module):
-            for sub in get_assignment_submissions(asgn):
-                student = sub['user']
-                yield module, asgn, student, sub
+    """Generate all combinations of assignment, student and submission."""
+    students_by_id = {stu['id']: stu for stu in get_course_students(course_id)}
+    for submission in get_course_submissions(course_id):
+        assignment = submission['assignment']
+        try:
+            student = students_by_id[submission['user_id']]
+            yield assignment, student, submission
+        except KeyError:
+            # Student is no longer enrolled in the class.
+            pass
 
 
-def get_github_repo_assignments(course_id):
+def get_github_repo_submissions(course_id):
     """Generate only course combinations where submission is a github repo."""
-    for module, asgn, stu, sub in all_course_combos(course_id):
+    for asgn, stu, sub in all_course_combos(course_id):
         # download .py or other files
         if is_git_repo(sub):
-            yield module, asgn, stu, sub
+            yield asgn, stu, sub
 
 
 if __name__ == '__main__':
@@ -197,11 +223,11 @@ if __name__ == '__main__':
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
 
-    for module, asgn, stu, sub in get_github_repo_assignments(COURSE_ID):
+    for asgn, stu, sub in get_github_repo_submissions(COURSE_ID):
         # download .py or other files
         print("\n{}'s submission for {}: {}".format(
-            stu['name'], asgn['title'], sub['url'])
+            stu['name'], asgn['name'], sub['url'])
         )
-        path = make_dir_path(root, module, asgn, stu, dir_order)
+        path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
-        get_git_repo(sub, path)
+        # get_git_repo(sub, path)

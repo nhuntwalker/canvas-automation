@@ -31,6 +31,9 @@ GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 DEFAULT_DIR_ORDER = 'mas'
 DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
+FILEXISTS_ERRNO = 17
+FILEDOESNOTEXIST_ERRNO = 2
+
 
 def api_request(url, **kwargs):
     """Return json information from specified API query."""
@@ -116,17 +119,30 @@ def make_directory(path):
     """Create a new directory with the given path."""
     try:
         os.mkdir(path)
-    except (IOError, OSError):
-        pass
+    except OSError as e:
+        # path already exists; ignore
+        if e.errno == FILEXISTS_ERRNO:
+            pass
+        elif e.errno == FILEDOESNOTEXIST_ERRNO:
+            # parent path does not exist; try to make it
+            parent, child = os.path.split(path)
+            make_directory(parent)
+            make_directory(path)
+
 
 
 def is_git_repo(submission):
     """Determine if the given submission is a git repository."""
-    return (
-        submission['submission_type'] == 'online_url' and
-        re.match(GITHUB_REPO_PAT, submission['url']) and
-        'profile' not in submission['url']
-    )
+    try:
+        url = submission['url']
+        sub_type = submission['submission_type']
+        return (
+            sub_type == 'online_url' and
+            re.match(GITHUB_REPO_PAT, url) and
+            'profile' not in url
+        )
+    except KeyError:
+        return False
 
 
 def git_grading_branch(submission, path):
@@ -165,6 +181,14 @@ def all_course_combos(course_id):
                 yield module, asgn, student, sub
 
 
+def get_github_repo_assignments(course_id):
+    """Generate only those course combinations in which the submission is a github repo."""
+    for module, asgn, stu, sub in all_course_combos(course_id):
+        # download .py or other files
+        if is_git_repo(sub):
+            yield module, asgn, stu, sub
+
+
 if __name__ == '__main__':
 
     try:
@@ -179,17 +203,12 @@ if __name__ == '__main__':
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
     make_directory(root)
 
-    for module, asgn, stu, sub in all_course_combos(COURSE_ID):
-        path = make_dir_path(root, module, asgn, stu, dir_order)
-        make_directory(path)
-
-        if not all((module, asgn, stu, sub)):
-            continue
-
+    for module, asgn, stu, sub in get_github_repo_assignments(COURSE_ID):
+        # download .py or other files
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['title'], sub['url'])
         )
-
-        # download .py or other files
         if is_git_repo(sub):
+            path = make_dir_path(root, module, asgn, stu, dir_order)
+            make_directory(path)
             git_grading_branch(sub, path)

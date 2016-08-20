@@ -133,8 +133,8 @@ def make_directory(path):
 def is_git_repo(submission):
     """Determine if the given submission is a git repository."""
     try:
-        url = submission['url']
-        sub_type = submission['submission_type']
+        sub_type = submission['submission_type'] or ''
+        url = submission['url'] or ''
     except KeyError:
         return False
     return all((
@@ -204,4 +204,4 @@ if __name__ == '__main__':
         )
         path = make_dir_path(root, module, asgn, stu, dir_order)
         make_directory(path)
-        # get_git_repo(sub, path)
+        get_git_repo(sub, path)

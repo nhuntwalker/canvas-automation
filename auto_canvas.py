@@ -2,28 +2,34 @@
 
 
 # Todo
+# set the name of the grading branch to grading-student-name for clarification
+
 # check if submission type is a .py or other type of file; download that
 # Change to dir structure: student/assignment
 # make dir structure an command line option, along with course ID, token, etc
 # may be able to use /tree/ or /blob/ as refspecs instead of master
 
+
 from __future__ import unicode_literals
 import os
 import re
+import sys
+import argparse
 import requests
 from subprocess import call
 from string import punctuation
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-ROOT_NAME = 'grading'
+DEFAULT_ROOT_NAME = 'grading'
 
 TOKEN = os.environ['API_TOKEN']
 COURSE_ID = os.environ['COURSE_ID']
 API_ROOT = 'https://canvas.instructure.com/api/v1/'
-COURSES_ROOT = 'https://canvas.instructure.com/api/v1/courses'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
+DEFAULT_DIR_ORDER = 'mas'
+DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
 
 def api_request(url, **kwargs):
@@ -42,14 +48,20 @@ def joined_api_request(*args, **kwargs):
 
 def get_course_modules(course_id):
     """Return list of modules of the course specified by ID."""
-    return joined_api_request(COURSES_ROOT, course_id, 'modules')
+    return joined_api_request(API_ROOT, 'courses', course_id, 'modules')
 
 
 def get_course_students(course_id):
     """Return list of student dicts of the course specified by ID."""
-    return joined_api_request(COURSES_ROOT, course_id, 'students')
+    return joined_api_request(API_ROOT, 'courses', course_id, 'students')
 
 
+def get_course_assignments(course_id):
+    """Return list of student dicts of the course specified by ID."""
+    return joined_api_request(API_ROOT, 'courses', course_id, 'assignments')
+
+
+# possible to re-write without extra loop?
 def get_module_assignments(module):
     """Return list of assignment dicts of the specified module."""
     return [item for item in api_request(module['items_url'])
@@ -87,13 +99,15 @@ def make_dirname(name):
     return name.lower()
 
 
-def make_dir_path(root, module, assignment, student):
+def make_dir_path(root, module, assignment, student, dir_order):
     """Create a directory path from the given components."""
-    names = (
-        module.get('name', ''),
-        assignment.get('title', ''),
-        student.get('name', '')
-    )
+    charmap = {
+        'm': module,
+        'a': assignment,
+        's': student,
+    }
+    items = map(lambda char: charmap[char], dir_order)
+    names = map(lambda item: item.get('name', item.get('title', '')), items)
     dirnames = map(make_dirname, names)
     return os.path.join(root, *dirnames)
 
@@ -117,7 +131,7 @@ def is_git_repo(submission):
 
 def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
-    repo_url = sub['url']
+    repo_url = submission['url']
     try:
         repo_url, pull_info = repo_url.split('/pull/')
         pull_num = pull_info.split('/')[0]
@@ -153,11 +167,20 @@ def all_course_combos(course_id):
 
 if __name__ == '__main__':
 
-    root = os.path.join(HERE, ROOT_NAME)
+    try:
+        dir_order = sys.argv[1]
+    except IndexError:
+        dir_order = DEFAULT_DIR_ORDER
+
+    if dir_order not in DIR_ORDERS:
+        print('Invalid directory order acronym.')
+        sys.exit()
+
+    root = os.path.join(HERE, DEFAULT_ROOT_NAME)
     make_directory(root)
 
     for module, asgn, stu, sub in all_course_combos(COURSE_ID):
-        path = make_dir_path(root, module, asgn, stu)
+        path = make_dir_path(root, module, asgn, stu, dir_order)
         make_directory(path)
 
         if not all((module, asgn, stu, sub)):

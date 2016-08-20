@@ -5,6 +5,7 @@
 # setting multiple "include" params does not work; only returns last item
 
 # Todo
+# proper argparse
 # set the name of the grading branch to grading-student-name for clarification
 
 # check if submission type is a .py or other type of file; download that
@@ -28,7 +29,7 @@ API_ROOT = 'https://canvas.instructure.com/api/v1/'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
-DEFAULT_DIR_ORDER = 'mas'
+DEFAULT_DIR_ORDER = 'as'
 DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
 FILEXISTS_ERRNO = 17
@@ -144,7 +145,7 @@ def is_git_repo(submission):
     ))
 
 
-def get_git_repo(submission, path):
+def get_git_repo(submission, student, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = submission['url']
     try:
@@ -183,10 +184,9 @@ def all_course_combos(course_id):
             pass
 
 
-def get_github_repo_submissions(course_id):
+def github_repo_submissions(course_id):
     """Generate only course combinations where submission is a github repo."""
     for asgn, stu, sub in all_course_combos(course_id):
-        # download .py or other files
         if is_git_repo(sub):
             yield asgn, stu, sub
 
@@ -204,12 +204,11 @@ if __name__ == '__main__':
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
 
-    for asgn, stu, sub in get_github_repo_submissions(COURSE_ID):
-        # download .py or other files
+    for asgn, stu, sub in github_repo_submissions(COURSE_ID):
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['name'], sub['url'])
         )
         # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
-        get_git_repo(sub, path)
+        get_git_repo(sub, stu, path)

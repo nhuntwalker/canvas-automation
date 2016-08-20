@@ -3,6 +3,7 @@
 
 # Todo
 # set the name of the grading branch to grading-student-name for clarification
+
 # check if submission type is a .py or other type of file; download that
 # Change to dir structure: student/assignment
 # make dir structure an command line option, along with course ID, token, etc
@@ -55,6 +56,12 @@ def get_course_students(course_id):
     return joined_api_request(API_ROOT, 'courses', course_id, 'students')
 
 
+def get_course_assignments(course_id):
+    """Return list of student dicts of the course specified by ID."""
+    return joined_api_request(API_ROOT, 'courses', course_id, 'assignments')
+
+
+# possible to re-write without extra loop?
 def get_module_assignments(module):
     """Return list of assignment dicts of the specified module."""
     return [item for item in api_request(module['items_url'])

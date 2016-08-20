@@ -42,80 +42,58 @@ def api_request(url, **kwargs):
     params.update(kwargs)
     response = requests.get(url, params=params)
     result = response.json()
-    method = getattr(result, 'update', getattr(result, 'extend'))
+    # Currently assumes that result is a list of json objects.
+    for item in result:
+        yield item
     try:
         next_url = response.links['next']['url']
-        method(api_request(next_url, **kwargs))
+        for item in api_request(next_url, **kwargs):
+            yield item
     except KeyError:
         pass
-    # import pdb;pdb.set_trace()
-    return result
 
 
 def joined_api_request(*args, **kwargs):
     """Return JSON from a sub-attribute of a given course."""
     url = '/'.join(args + ('', ))
-    return api_request(url, **kwargs)
+    for item in api_request(url, **kwargs):
+        yield item
 
 
 def get_course_modules(course_id):
     """Return list of module dicts of the course specified by ID."""
-    return joined_api_request(API_ROOT, 'courses', course_id, 'modules')
+    args = (API_ROOT, 'courses', course_id, 'modules')
+    for module in joined_api_request(*args):
+        yield module
 
 
 def get_course_students(course_id):
     """Return list of student dicts of the course specified by ID."""
-    return joined_api_request(API_ROOT, 'courses', course_id, 'students')
+    args = (API_ROOT, 'courses', course_id, 'students')
+    for student in joined_api_request(*args):
+        yield student
 
 
 def get_course_assignments(course_id):
     """Return list of assignment dicts of the course specified by ID."""
-    return joined_api_request(API_ROOT, 'courses', course_id, 'assignments')
+    args = (API_ROOT, 'courses', course_id, 'assignments')
+    for assignment in joined_api_request(*args):
+        yield assignment
 
 
 def get_course_submissions(course_id):
     """Return list of submission dicts of the course specified by ID."""
-    return joined_api_request(
-        API_ROOT,
-        'courses',
-        course_id,
-        'students',
-        'submissions',
-        student_ids='all',
-        include='assignment',
-        # include='user', # WON'T WORK to submit multiple includes!
-    )
-
-
-# # possible to re-write without extra loop?
-# def get_module_assignments(module):
-#     """Return list of assignment dicts of the specified module."""
-#     return [item for item in api_request(module['items_url'])
-#             if item['type'] == 'Assignment']
+    args = (API_ROOT, 'courses', course_id, 'students', 'submissions')
+    kwargs = dict(student_ids='all', include='assignment')
+    # include='user', # WON'T WORK to submit multiple includes!
+    for submission in joined_api_request(*args, **kwargs):
+        yield submission
 
 
 def get_assignment_submissions(asgn):
     """Return list of submission dicts for the specified assignment."""
-    try:
-        return joined_api_request(asgn['url'], 'submissions', include='user')
-    except KeyError:
-        try:
-            url = asgn['submissions_download_url'].split('?')[0]
-            return api_request(url, include='user')
-        except KeyError:
-            return []
-
-
-# def get_assignment_student_submission(asgn, student):
-#     """Return single submission dict specified by assignment and student."""
-#     try:
-#         return joined_api_request(asgn['url'], 'submissions', str(student['id']))
-#     except KeyError:
-#         try:
-#             url = asgn['submissions_download_url'].split('?')[0]
-#             return joined_api_request(url, str(student['id']))
-#         except KeyError:
-#             return {}
+    url = asgn.get('url', asgn.get('submissions_download_url', '').split('?')[0])
+    return joined_api_request(url, 'submissions', include='user')
 
 
 def make_dirname(name):
@@ -153,7 +131,7 @@ def make_directory(path):
 
 
 def is_git_repo(submission):
-    """Determine if the given submission is a git repository."""
+    """Return boolean of whether the given submission is a git repository."""
     try:
         sub_type = submission['submission_type'] or ''
         url = submission['url'] or ''
@@ -230,4 +208,4 @@ if __name__ == '__main__':
         )
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
-        # get_git_repo(sub, path)
+        get_git_repo(sub, path)

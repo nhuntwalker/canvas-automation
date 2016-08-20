@@ -120,15 +120,14 @@ def make_directory(path):
     try:
         os.mkdir(path)
     except OSError as e:
-        # path already exists; ignore
+        # Path already exists; ignore.
         if e.errno == FILEXISTS_ERRNO:
             pass
         elif e.errno == FILEDOESNOTEXIST_ERRNO:
-            # parent path does not exist; try to make it
+            # Parent path does not exist; try to make it.
             parent, child = os.path.split(path)
             make_directory(parent)
             make_directory(path)
-
 
 
 def is_git_repo(submission):

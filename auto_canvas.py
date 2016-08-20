@@ -135,16 +135,16 @@ def is_git_repo(submission):
     try:
         url = submission['url']
         sub_type = submission['submission_type']
-        return (
-            sub_type == 'online_url' and
-            re.match(GITHUB_REPO_PAT, url) and
-            'profile' not in url
-        )
     except KeyError:
         return False
+    return (
+        sub_type == 'online_url' and
+        re.match(GITHUB_REPO_PAT, url) and
+        'profile' not in url
+    )
 
 
-def git_grading_branch(submission, path):
+def get_git_repo(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = submission['url']
     try:
@@ -170,10 +170,10 @@ def git_grading_branch(submission, path):
 def all_course_combos(course_id):
     """Generate all combinations of module, assignment, student names."""
     for module in get_course_modules(course_id):
-        yield module, {}, {}, {}
+        # yield module, {}, {}, {}
 
         for asgn in get_module_assignments(module):
-            yield module, asgn, {}, {}
+            # yield module, asgn, {}, {}
 
             for sub in get_assignment_submissions(asgn):
                 student = sub['user']
@@ -181,7 +181,7 @@ def all_course_combos(course_id):
 
 
 def get_github_repo_assignments(course_id):
-    """Generate only those course combinations in which the submission is a github repo."""
+    """Generate only course combinations where submission is a github repo."""
     for module, asgn, stu, sub in all_course_combos(course_id):
         # download .py or other files
         if is_git_repo(sub):
@@ -200,14 +200,12 @@ if __name__ == '__main__':
         sys.exit()
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
-    make_directory(root)
 
     for module, asgn, stu, sub in get_github_repo_assignments(COURSE_ID):
         # download .py or other files
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['title'], sub['url'])
         )
-        if is_git_repo(sub):
-            path = make_dir_path(root, module, asgn, stu, dir_order)
-            make_directory(path)
-            git_grading_branch(sub, path)
+        path = make_dir_path(root, module, asgn, stu, dir_order)
+        make_directory(path)
+        # get_git_repo(sub, path)

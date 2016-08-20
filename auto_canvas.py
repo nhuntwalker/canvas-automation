@@ -2,10 +2,12 @@
 
 
 # Todo
+# set the name of the grading branch to grading-student-name for clarification
 # check if submission type is a .py or other type of file; download that
 # Change to dir structure: student/assignment
 # make dir structure an command line option, along with course ID, token, etc
 # may be able to use /tree/ or /blob/ as refspecs instead of master
+
 
 from __future__ import unicode_literals
 import os
@@ -122,7 +124,7 @@ def is_git_repo(submission):
 
 def git_grading_branch(submission, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
-    repo_url = sub['url']
+    repo_url = submission['url']
     try:
         repo_url, pull_info = repo_url.split('/pull/')
         pull_num = pull_info.split('/')[0]

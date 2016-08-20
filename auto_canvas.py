@@ -137,11 +137,11 @@ def is_git_repo(submission):
         sub_type = submission['submission_type']
     except KeyError:
         return False
-    return (
-        sub_type == 'online_url' and
-        re.match(GITHUB_REPO_PAT, url) and
-        'profile' not in url
-    )
+    return all((
+        sub_type == 'online_url',
+        re.match(GITHUB_REPO_PAT, url),
+        'profile' not in url,
+    ))
 
 
 def get_git_repo(submission, path):
@@ -170,11 +170,7 @@ def get_git_repo(submission, path):
 def all_course_combos(course_id):
     """Generate all combinations of module, assignment, student names."""
     for module in get_course_modules(course_id):
-        # yield module, {}, {}, {}
-
         for asgn in get_module_assignments(module):
-            # yield module, asgn, {}, {}
-
             for sub in get_assignment_submissions(asgn):
                 student = sub['user']
                 yield module, asgn, student, sub

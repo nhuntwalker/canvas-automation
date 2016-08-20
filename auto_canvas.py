@@ -129,7 +129,7 @@ def is_git_repo(submission):
     )
 
 
-def git_grading_branch(submission, path):
+def git_grading_branch(submission, path, student):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = submission['url']
     try:
@@ -143,11 +143,13 @@ def git_grading_branch(submission, path):
         refspec = 'master'
 
     repo_url = repo_url + '.git' * (not repo_url.endswith('.git'))
+    local_branchname = '-'.join(('grading', make_dirname(student['name'])))
+
     print('cloning from {}'.format(repo_url))
     call(['git', 'clone', repo_url, path], cwd=path)
     print('fetching from refspec: {}'.format(refspec))
-    call(['git', 'fetch', 'origin', refspec + ':grading'], cwd=path)
-    call(['git', 'checkout', 'grading'], cwd=path)
+    call(['git', 'fetch', 'origin', ':'.join((refspec, local_branchname))], cwd=path)
+    call(['git', 'checkout', local_branchname], cwd=path)
     print('pulling from refspec: {}'.format(refspec))
     call(['git', 'pull', 'origin', refspec], cwd=path)
 
@@ -192,4 +194,4 @@ if __name__ == '__main__':
 
         # download .py or other files
         if is_git_repo(sub):
-            git_grading_branch(sub, path)
+            git_grading_branch(sub, path, stu)

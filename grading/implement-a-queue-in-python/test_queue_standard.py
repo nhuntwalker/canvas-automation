@@ -1,4 +1,4 @@
-"""Examples for blog post about pytest parametrization."""
+"""Standardized tests for Queue data structure."""
 
 import random
 import string

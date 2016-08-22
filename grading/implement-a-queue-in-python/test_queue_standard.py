@@ -66,7 +66,6 @@ def new_queue(request):
     if dq and sequence:
         instance.dequeue()
         sequence = sequence[1:]
-    # Test instances that have been dequeued, then enqueued something else
 
     if sequence:
         first = sequence[0]
@@ -88,6 +87,16 @@ def test_has_method(method, new_queue):
     assert hasattr(new_queue.instance, method)
 
 
+def test_enqueue(new_queue):
+    """Test that unique enqueued item is dequeued after all other items."""
+    from hashlib import md5
+    val = md5(b'SUPERUNIQUEFLAGVALUE').hexdigest()
+    new_queue.instance.enqueue(val)
+    for _ in range(new_queue.size):
+        new_queue.instance.dequeue()
+    assert new_queue.instance.dequeue() == val
+
+
 def test_dequeue(new_queue):
     """Test that first value puted into queue is returned by dequeue."""
     if new_queue.dq_error is not None:
@@ -105,8 +114,9 @@ def test_dequeue_error(new_queue):
 
 def test_dequeue_sequence(new_queue):
     """Test that entire sequence is returned by successive dequeues."""
-    for item in new_queue.sequence:
-        assert new_queue.instance.dequeue() == item
+    sequence = list(new_queue.sequence)
+    output = [new_queue.instance.dequeue() for _ in sequence]
+    assert sequence == output
 
 
 def test_peek(new_queue):

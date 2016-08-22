@@ -51,15 +51,15 @@ TEST_CASES = product(TEST_CASES, POP)
 def new_stack(request):
     """Return a new empty instance of MyQueue."""
     from stack import Stack
-    sequence, dq, peek = request.param
+    sequence, pop = request.param
 
     instance = Stack()
     for val in sequence:
         instance.push(val)
 
-    if dq and sequence:
+    if pop and sequence:
         instance.pop()
-        sequence = sequence[1:]
+        sequence = sequence[:-1]
 
     if sequence:
         first = sequence[-1]

@@ -44,7 +44,7 @@ STR_TEST_CASES = (random.sample(string.printable,
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 
 
-DQ = (True, False)
+DQ = list(range(5))
 PEEK = (True, False)
 
 TEST_CASES = product(TEST_CASES, DQ, PEEK)
@@ -64,8 +64,11 @@ def new_queue(request):
         instance.peek()
 
     if dq and sequence:
-        instance.dequeue()
-        sequence = sequence[1:]
+        for _ in range(min(len(sequence), dq)):
+            instance.dequeue()
+            sequence = sequence[1:]
+            if peek:
+                instance.peek()
 
     if sequence:
         first = sequence[0]

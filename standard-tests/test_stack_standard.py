@@ -1,4 +1,4 @@
-"""Standardized tests for Queue data structure."""
+"""Standardized tests for Stack data structure."""
 
 import random
 import string

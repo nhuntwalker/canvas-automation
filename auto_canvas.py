@@ -5,6 +5,7 @@
 # setting multiple "include" params does not work; only returns last item
 
 # Todo
+# Check submission status: only try to git clone if it needs grading
 # proper argparse
 # set the name of the grading branch to grading-student-name for clarification
 

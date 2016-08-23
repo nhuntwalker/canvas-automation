@@ -211,3 +211,8 @@ def test_peek(new_deque):
 def test_peekleft(new_deque):
     """Test that Deque.peek() returns the expected first value."""
     assert new_deque.instance.peekleft() == new_deque.first
+
+
+def test_size(new_deque):
+    """Test that Queue.size() returns the expected item count."""
+    assert new_deque.instance.size() == new_deque.size

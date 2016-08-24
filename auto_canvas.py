@@ -3,10 +3,9 @@
 # Todo
 # Check submission status: only try to git clone if it needs grading
 # proper argparse
-
 # check if submission type is a .py or other type of file; download that
 # may be able to use /tree/ or /blob/ as refspecs instead of master
-
+# Handle git merge message prompt on pull; handle git merge conflict
 
 from __future__ import unicode_literals
 import os
@@ -173,20 +172,6 @@ def get_git_repo(submission, student, path):
     call(['git', 'checkout', local_branchname], cwd=path)
     print('pulling from refspec: {}'.format(refspec))
     call(['git', 'pull', 'origin', refspec], cwd=path)
-
-
-def github_repo_submissions(submissions):
-    """Filter submissions which are a github repo."""
-    for submission in submissions:
-        if is_git_repo(submission):
-            yield submission
-
-
-def submissions_to_grade(submissions):
-    """Filter submissions which need to be graded."""
-    for submission in submissions:
-        if needs_grading(submission):
-            yield submission
 
 
 if __name__ == '__main__':

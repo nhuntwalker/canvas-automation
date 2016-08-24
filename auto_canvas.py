@@ -5,6 +5,7 @@
 # setting multiple "include" params does not work; only returns last item
 
 # Todo
+# Check submission status: only try to git clone if it needs grading
 # proper argparse
 # set the name of the grading branch to grading-student-name for clarification
 
@@ -84,8 +85,7 @@ def get_course_assignments(course_id):
 def get_course_submissions(course_id):
     """Return list of submission dicts of the course specified by ID."""
     args = (API_ROOT, 'courses', course_id, 'students', 'submissions')
-    kwargs = dict(student_ids='all', include='assignment')
-    # include='user', # WON'T WORK to submit multiple includes!
+    kwargs = {'student_ids': 'all', 'include[]': ['assignment', 'user']}
     for submission in joined_api_request(*args, **kwargs):
         yield submission
 
@@ -172,16 +172,10 @@ def get_git_repo(submission, student, path):
 
 def all_course_combos(course_id):
     """Generate all combinations of assignment, student and submission."""
-    students_by_id = {stu['id']: stu for stu in get_course_students(course_id)}
-
     for submission in get_course_submissions(course_id):
         assignment = submission['assignment']
-        try:
-            student = students_by_id[submission['user_id']]
-            yield assignment, student, submission
-        except KeyError:
-            # Student is no longer enrolled in the class.
-            pass
+        student = submission['user']
+        yield assignment, student, submission
 
 
 def github_repo_submissions(course_id):

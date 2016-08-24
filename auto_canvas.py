@@ -188,8 +188,8 @@ if __name__ == '__main__':
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
 
     submissions = get_course_submissions(COURSE_ID)
-    submissions = filter(needs_grading, submissions)
-    github_submissions = filter(is_git_repo, submissions)
+    submissions_to_grade = filter(needs_grading, submissions)
+    github_submissions = filter(is_git_repo, submissions_to_grade)
 
     for sub in github_submissions:
         asgn = sub['assignment']
@@ -197,8 +197,6 @@ if __name__ == '__main__':
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['name'], sub['url'])
         )
-
-        # import pdb;pdb.set_trace()
 
         # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)

@@ -31,15 +31,16 @@ EDGE_CASES = [
 
 # lists of ints
 INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 20)) for n in range(10))
+                  random.randrange(2, 40)) for n in range(10))
 
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES)
 
 INIT = (True, False)
-POP = (True, False)
+POP = list(range(3))
 
 TEST_CASES = product(TEST_CASES, INIT, POP)
 
+# Min heap or max heap. defaults to minheap i.e. MAX == True
 MAX = False
 LIMIT = 999999999999999999999999999
 
@@ -59,8 +60,9 @@ def new_heap(request):
 
     sorted_sequence = sorted(sequence, reverse=MAX)
     if pop and sorted_sequence:
-        instance.pop()
-        sorted_sequence = sorted_sequence[1:]
+        for _ in range(min(len(sorted_sequence), pop)):
+            instance.pop()
+            sorted_sequence = sorted_sequence[1:]
 
     if sorted_sequence:
         pop_value = sorted_sequence[0]
@@ -83,7 +85,7 @@ def test_has_method(method, new_heap):
 def test_init_error(val):
     """Test that heap throws value error when initialized with non iterable."""
     from binary_heap import BinaryHeap
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         BinaryHeap(val)
 
 

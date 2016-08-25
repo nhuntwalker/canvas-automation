@@ -205,8 +205,8 @@ def test_remove_valid(new_dll):
     """Test that first item can be removed safely."""
     if new_dll.remove_val is None:
         pytest.skip()
-    result = list(new_dll.sequence_after_remove)
     new_dll.instance.remove(new_dll.remove_val)
+    result = list(new_dll.sequence_after_remove)
     output = [new_dll.instance.pop() for _ in result]
     assert output == result
 

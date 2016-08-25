@@ -1,16 +1,11 @@
 """Generate directories for Python 401d4 class assignments."""
 
-
-# BUGFIX:
-# setting multiple "include" params does not work; only returns last item
-
 # Todo
 # Check submission status: only try to git clone if it needs grading
 # proper argparse
-# set the name of the grading branch to grading-student-name for clarification
-
 # check if submission type is a .py or other type of file; download that
 # may be able to use /tree/ or /blob/ as refspecs instead of master
+# Handle git merge message prompt on pull; handle git merge conflict
 
 from __future__ import unicode_literals
 import os
@@ -145,6 +140,15 @@ def is_git_repo(submission):
     ))
 
 
+def needs_grading(submission):
+    """Return boolean of whether the given submission needs to be graded."""
+    return any((
+        submission['grade_matches_current_submission'] is False,
+        submission['grade'] is None,
+        submission['score'] is None,
+    ))
+
+
 def get_git_repo(submission, student, path):
     """Clone student repo, fetch submitted pull request into grading branch."""
     repo_url = submission['url']
@@ -170,21 +174,6 @@ def get_git_repo(submission, student, path):
     call(['git', 'pull', 'origin', refspec], cwd=path)
 
 
-def all_course_combos(course_id):
-    """Generate all combinations of assignment, student and submission."""
-    for submission in get_course_submissions(course_id):
-        assignment = submission['assignment']
-        student = submission['user']
-        yield assignment, student, submission
-
-
-def github_repo_submissions(course_id):
-    """Generate only course combinations where submission is a github repo."""
-    for asgn, stu, sub in all_course_combos(course_id):
-        if is_git_repo(sub):
-            yield asgn, stu, sub
-
-
 if __name__ == '__main__':
 
     try:
@@ -198,10 +187,19 @@ if __name__ == '__main__':
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
 
-    for asgn, stu, sub in github_repo_submissions(COURSE_ID):
+    submissions = get_course_submissions(COURSE_ID)
+    submissions_to_grade = filter(needs_grading, submissions)
+    github_submissions = filter(is_git_repo, submissions_to_grade)
+
+    for sub in github_submissions:
+        asgn = sub['assignment']
+        stu = sub['user']
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['name'], sub['url'])
         )
+
+        # import pdb;pdb.set_trace()
+
         # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)

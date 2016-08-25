@@ -1,12 +1,7 @@
 """Standardized tests for the Heap data structure."""
 
-# push value known to not be min or max --> still expect previous min/max
 # intialize by __init__
 # initialize by pushing one at a time
-
-# min and max
-# four items
-# lots and lots of items
 
 import random
 import pytest
@@ -82,6 +77,14 @@ def new_heap(request):
 def test_has_method(method, new_heap):
     """Test that heap has all the correct methods."""
     assert hasattr(new_heap.instance, method)
+
+
+@pytest.mark.parametrize('val', [1, False, True, None, Exception])
+def test_init_error(val):
+    """Test that heap throws value error when initialized with non iterable."""
+    from binary_heap import BinaryHeap
+    with pytest.raises(ValueError):
+        BinaryHeap(val)
 
 
 def test_push_pop(new_heap):

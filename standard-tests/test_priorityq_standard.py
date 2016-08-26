@@ -23,14 +23,14 @@ MyQueueFixture = namedtuple(
 # mix of some same, some different
 
 EDGE_CASES = [
-    # (),
-    # (0,),
-    # (0, 1),
-    # (1, 0),
-    # '',
-    # 'a',
-    # 'ab',
-    # 'ba',
+    (),
+    (0,),
+    (0, 1),
+    (1, 0),
+    '',
+    'a',
+    'ab',
+    'ba',
 ]
 
 PRIORITIES = [
@@ -51,9 +51,6 @@ STR_TEST_CASES = (random.sample(string.printable,
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 # iters of tuples for every combination of priority and input sequence
 TEST_CASES = (zip(t, p) for t, p in product(TEST_CASES, PRIORITIES))
-
-for item in TEST_CASES:
-    import pdb;pdb.set_trace()
 
 POP = range(3)
 PEEK = (True, False)

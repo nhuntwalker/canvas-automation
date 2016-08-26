@@ -50,6 +50,8 @@ def new_heap(request):
     """Return a new empty instance of MyQueue."""
     from binary_heap import BinaryHeap
     sequence, init, pop = request.param
+    # So that cases which are generators can be used more than once
+    sequence = list(sequence)
 
     if init:
         instance = BinaryHeap(sequence)

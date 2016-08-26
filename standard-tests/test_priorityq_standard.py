@@ -3,8 +3,9 @@
 import random
 import string
 import pytest
-from itertools import product, chain, repeat, cycle
+from operator import itemgetter
 from collections import namedtuple
+from itertools import product, chain, repeat, cycle
 
 REQ_METHODS = [
     'insert',
@@ -14,7 +15,7 @@ REQ_METHODS = [
 
 MyQueueFixture = namedtuple(
     'MyQueueFixture',
-    ('instance', 'first', 'last', 'sequence', 'pop_error')
+    ('instance', 'first', 'last', 'sorted_sequence', 'pop_error')
 )
 
 # Give a priority to all test cases
@@ -37,7 +38,7 @@ PRIORITIES = [
     repeat(0),  # all the same priority
     cycle((0, 1)),  # equal mix of two priorities
     random.sample(range(-10000, 10000), 100),  # 100 unique priorities
-    chain(*(random.sample(range(10), 4) for _ in range(25)))  # random mix of ints 0-9
+    (random.randrange(10) for _ in range(100))  # 100 random mix of ints 0-9
 ]
 # lists of ints
 INT_TEST_CASES = (random.sample(range(1000),
@@ -57,12 +58,17 @@ PEEK = (True, False)
 
 TEST_CASES = product(TEST_CASES, POP, PEEK)
 
+MAX = True
+
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_priorityq(request):
     """Return a new empty instance of MyQueue."""
     from priorityq import PriorityQueue
     sequence, pop, peek = request.param
+
+    # sort sequence by second item
+    sorted_sequence = sorted(sequence, key=itemgetter(1), reverse=MAX)
 
     instance = PriorityQueue()
     for val in sequence:
@@ -71,25 +77,22 @@ def new_priorityq(request):
     if peek:
         instance.peek()
 
-    if pop and sequence:
-        for _ in range(min(len(sequence), pop)):
-            instance.pop()
-            sequence = sequence[1:]
-            if peek:
-                instance.peek()
+    for _ in range(min(len(sorted_sequence), pop)):
+        instance.pop()
+        sorted_sequence = sorted_sequence[1:]
+        if peek:
+            instance.peek()
 
-    if sequence:
-        first = sequence[0]
-        last = sequence[-1]
+    try:
+        first = sorted_sequence[0]
+        last = sorted_sequence[-1]
         pop_error = None
-
-    else:
+    except IndexError:
         first = None
         last = None
         pop_error = IndexError
 
-    size = len(sequence)
-    return MyQueueFixture(instance, first, last, sequence, pop_error, size)
+    return MyQueueFixture(instance, first, last, sorted_sequence, pop_error)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

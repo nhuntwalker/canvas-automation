@@ -20,7 +20,7 @@ REQ_METHODS = [
 
 MyGraphFixture = namedtuple(
     'MyGraphFixture',
-    ('instance', 'dict', 'nodes', 'edges')
+    ('instance', 'dict_', 'nodes', 'edges')
 )
 
 EDGE_CASES = [
@@ -42,10 +42,6 @@ INT_TEST_CASES = (random.sample(range(1000),
 STR_TEST_CASES = (random.sample(string.printable,
                   random.randrange(2, 100)) for n in range(10))
 
-# LIST_TEST_CASES
-# SET_TEST_CASES
-# DICT_TEST_CASES
-
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 
 
@@ -58,27 +54,23 @@ TEST_CASES = product(TEST_CASES, POP)
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    sequence, pop = request.param
+    nodes, pop = request.param
 
     instance = Graph()
-    for val in sequence:
-        instance.push(val)
+    for val in nodes:
+        instance.add_node(val)
 
-    if pop and sequence:
-        instance.pop()
-        sequence = sequence[:-1]
+    # if pop and nodes:
+    #     instance.pop()
+    #     nodes = nodes[:-1]
 
-    if sequence:
-        first = sequence[-1]
-        last = sequence[0]
+    if nodes:
         pop_error = None
 
     else:
-        first = None
-        last = None
         pop_error = IndexError
 
-    return MyGraphFixture(instance, first, last, sequence, pop_error)
+    return MyGraphFixture(instance, 'dict_', nodes, 'edges', pop_error)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

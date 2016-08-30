@@ -26,13 +26,13 @@ MyGraphFixture = namedtuple(
 
 def _make_node_edge_combos(nodes):
     """Generate different combinations of edges for the given nodes."""
-    all_possible = set(permutations(nodes, 2))
+    # all_possible = set(permutations(nodes, 2))
     yield nodes, set()  # No edges
-    if all_possible:
-        yield nodes, all_possible  # All possible edges
-        for _ in range(max(len(all_possible), 10)):
-            edge_count = random.randrange(1, len(all_possible))
-            yield nodes, set(random.sample(all_possible, edge_count))
+    # if all_possible:
+    #     yield nodes, all_possible  # All possible edges
+    #     for _ in range(max(len(all_possible), 10)):
+    #         edge_count = random.randrange(1, len(all_possible))
+    #         yield nodes, set(random.sample(all_possible, edge_count))
 
 
 def _make_graph_dict(nodes, edges):
@@ -64,7 +64,7 @@ STR_TEST_CASES = (random.sample(string.printable,
 
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 
-# TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
+TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
 
 
 # POP = (True, False)
@@ -76,12 +76,12 @@ TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    nodes, edges = None, None
-    # nodes, edges = request.param
+    # nodes, edges = None, None
+    nodes, edges = request.param
     # dict_ = _make_graph_dict(nodes, edges)
 
     instance = Graph()
-    for val in request.param:
+    for val in nodes:
         instance.add_node(val)
 
     return MyGraphFixture(instance, 'dict_', nodes, edges)

@@ -153,3 +153,12 @@ def test_add_new_node_no_edges(new_graph):
     other_neighbors = chain(*(new_graph.instance.neighbors(n)
                               for n in new_graph.instance.nodes()))
     assert val not in set(other_neighbors)
+
+
+def test_add_new_edge_not_already_there(new_graph):
+    """Check new nodes are added by add_edge when not already in graph."""
+    new_nodes = {'notingraph1', 'notingraph3'}
+    assert not new_nodes.issubset(new_graph.instance.nodes())
+    new_graph.instance.add_edge(*new_nodes)
+    assert new_nodes.issubset(new_graph.instance.nodes())
+

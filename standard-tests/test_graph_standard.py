@@ -70,6 +70,10 @@ def new_graph(request):
     else:
         pop_error = IndexError
 
+    # testname = 'size={}'.format(len(nodes))
+    # request.node.name = testname
+    # request.node.nodeid = testname
+
     return MyGraphFixture(instance, 'dict_', nodes, 'edges')
 
 

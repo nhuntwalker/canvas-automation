@@ -26,14 +26,15 @@ MyGraphFixture = namedtuple(
 
 def _make_node_edge_combos(nodes):
     """Generate different combinations of edges for the given nodes."""
+    nodes = set(nodes)
     all_possible = set(permutations(nodes, 2))
-    possible_size = len(all_possible)
+    max_edges = len(all_possible)
 
     yield nodes, set()  # No edges
     if all_possible:
         yield nodes, all_possible  # All possible edges
-        for _ in range(min(possible_size, 10)):
-            edge_count = random.randrange(1, possible_size)
+        for _ in range(min(max_edges, 10)):
+            edge_count = random.randrange(1, max_edges)
             edges = random.sample(all_possible, edge_count)
             yield nodes, set(edges)
 
@@ -81,7 +82,7 @@ def new_graph(request):
     from graph import Graph
     # nodes, edges = None, None
     nodes, edges = request.param
-    # dict_ = _make_graph_dict(nodes, edges)
+    dict_ = _make_graph_dict(nodes, edges)
 
     instance = Graph()
     for val in nodes:
@@ -103,6 +104,6 @@ def test_nodes_unique(new_graph):
     assert len(nodes) == len(set(nodes))
 
 
-# def test_nodes(new_graph):
-#     """Test that graph has all the inserted nodes."""
-#     assert set(new_graph.instance.nodes()) == new_graph.nodes
+def test_nodes(new_graph):
+    """Test that graph has all the inserted nodes."""
+    assert set(new_graph.instance.nodes()) == new_graph.nodes

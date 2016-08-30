@@ -23,7 +23,7 @@ REQ_METHODS = [
 
 MyGraphFixture = namedtuple(
     'MyGraphFixture',
-    ('instance', 'dict_', 'nodes', 'edges')
+    ('instance', 'dict_', 'nodes', 'edges', 'node_to_delete')
 )
 
 
@@ -94,7 +94,12 @@ def new_graph(request):
     for edge in edges:
         instance.add_edge(*edge)
 
-    return MyGraphFixture(instance, dict_, nodes, edges)
+    if nodes:
+        node_to_delete = random.choice(list(nodes))
+    else:
+        node_to_delete = None
+
+    return MyGraphFixture(instance, dict_, nodes, edges, node_to_delete)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -155,10 +160,25 @@ def test_add_new_node_no_edges(new_graph):
     assert val not in set(other_neighbors)
 
 
-def test_add_new_edge_not_already_there(new_graph):
+def test_add_edge(new_graph):
+    """Check new edge is added by add_edge when not already in graph."""
+    new_nodes = ('notingraph1', 'notingraph2')
+    assert new_nodes not in new_graph.instance.edges()
+    new_graph.instance.add_edge(*new_nodes)
+    assert new_nodes in new_graph.instance.edges()
+
+
+def test_add_edge_adds_nodes(new_graph):
     """Check new nodes are added by add_edge when not already in graph."""
-    new_nodes = {'notingraph1', 'notingraph3'}
+    new_nodes = {'notingraph1', 'notingraph2'}
     assert not new_nodes.issubset(new_graph.instance.nodes())
     new_graph.instance.add_edge(*new_nodes)
     assert new_nodes.issubset(new_graph.instance.nodes())
 
+
+def test_del_node(new_graph):
+    """Test that a node is no longer in the graph after deletion."""
+
+
+def test_del_node_neighbors(new_graph):
+    """Test deleted node is not a neighbor any other nodes."""

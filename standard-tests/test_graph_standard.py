@@ -22,8 +22,15 @@ REQ_METHODS = [
 ]
 
 MyGraphFixture = namedtuple(
-    'MyGraphFixture',
-    ('instance', 'dict_', 'nodes', 'edges', 'node_to_delete', 'edge_to_delete')
+    'MyGraphFixture', (
+        'instance',
+        'dict_',
+        'nodes',
+        'edges',
+        'node_to_delete',
+        'edge_to_delete',
+        'not_edges',
+    )
 )
 
 
@@ -104,7 +111,17 @@ def new_graph(request):
     except IndexError:
         edge_to_delete = None
 
-    return MyGraphFixture(instance, dict_, nodes, edges, node_to_delete, edge_to_delete)
+    not_edges = set(permutations(nodes, 2)) - edges
+
+    return MyGraphFixture(
+        instance,
+        dict_,
+        nodes,
+        edges,
+        node_to_delete,
+        edge_to_delete,
+        not_edges,
+    )
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -227,3 +244,11 @@ def test_adjacent(new_graph):
     """Test that adjacent returns expected values for connected edges."""
     assert all([new_graph.instance.adjacent(*edge)
                 for edge in new_graph.edges])
+
+
+def test_adjacent_false(new_graph):
+    """Test that all edges that doesn't exist are false by adjacency."""
+    if not new_graph.not_edges:
+        pytest.skip()
+    assert not any([new_graph.instance.adjacent(*edge)
+                    for edge in new_graph.not_edges])

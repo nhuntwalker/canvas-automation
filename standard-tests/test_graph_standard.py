@@ -26,7 +26,7 @@ MyGraphFixture = namedtuple(
 
 def _make_node_edge_combos(nodes):
     """Generate different combinations of edges for the given nodes."""
-    all_possible = set(permutations(nodes, 2))
+    all_possible = list(permutations(nodes, 2))
     possible_size = len(all_possible)
 
     yield nodes, set()  # No edges
@@ -34,7 +34,8 @@ def _make_node_edge_combos(nodes):
         yield nodes, all_possible  # All possible edges
         for _ in range(max(possible_size, 10)):
             edge_count = random.randrange(1, possible_size)
-            # yield nodes, set(random.sample(all_possible, edge_count))
+            edges = random.sample(all_possible, edge_count)
+            # yield nodes, set()
 
 
 def _make_graph_dict(nodes, edges):
@@ -58,11 +59,11 @@ EDGE_CASES = [
 
 # lists of ints
 INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 100)) for n in range(10))
+                  random.randrange(2, 20)) for n in range(10))
 
 # strings
 STR_TEST_CASES = (random.sample(string.printable,
-                  random.randrange(2, 100)) for n in range(10))
+                  random.randrange(2, 20)) for n in range(10))
 
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 

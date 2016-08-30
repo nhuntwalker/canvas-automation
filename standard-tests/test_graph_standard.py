@@ -88,7 +88,7 @@ def new_graph(request):
     for val in nodes:
         instance.add_node(val)
 
-    return MyGraphFixture(instance, 'dict_', nodes, edges)
+    return MyGraphFixture(instance, dict_, nodes, edges)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -107,3 +107,8 @@ def test_nodes_unique(new_graph):
 def test_nodes(new_graph):
     """Test that graph has all the inserted nodes."""
     assert set(new_graph.instance.nodes()) == new_graph.nodes
+
+
+def test_has_node(new_graph):
+    """Test that graph has all the inserted nodes."""
+    assert all((new_graph.instance.has_node(n) for n in new_graph.nodes))

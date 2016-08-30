@@ -1,8 +1,11 @@
 """Standardized tests for Stack data structure."""
 
+from __future__ import unicode_literals
+
 import random
 import string
 import pytest
+from hashlib import md5
 from itertools import product, chain, permutations
 from collections import namedtuple
 
@@ -85,8 +88,11 @@ def new_graph(request):
     dict_ = _make_graph_dict(nodes, edges)
 
     instance = Graph()
-    for val in nodes:
-        instance.add_node(val)
+    for node in nodes:
+        instance.add_node(node)
+
+    for edge in edges:
+        instance.add_edge(*edge)
 
     return MyGraphFixture(instance, dict_, nodes, edges)
 
@@ -111,4 +117,39 @@ def test_nodes(new_graph):
 
 def test_has_node(new_graph):
     """Test that graph has all the inserted nodes."""
-    assert all((new_graph.instance.has_node(n) for n in new_graph.nodes))
+    assert all([new_graph.instance.has_node(n) for n in new_graph.nodes])
+
+
+def test_edges(new_graph):
+    """Test that graph has all the correct edges."""
+    assert set(new_graph.instance.edges()) == new_graph.edges
+
+
+# def test_neighbors_error(new_graph):
+#     """Test that neighbors raises an error when given node is not in graph."""
+#     val = 'nodenotingraph'
+#     with pytest.raises(ValueError):
+#         new_graph.instance.neighbors(val)
+
+
+def test_del_node_error(new_graph):
+    """Test that del_node raises an error when node is not in graph."""
+    val = 'nodenotingraphtodelete'
+    with pytest.raises(ValueError):
+        new_graph.instance.del_node(val)
+
+
+def test_add_new_node_no_neighbors(new_graph):
+    """Test new node added without edges is in the graph without neighbors."""
+    val = 'newnodenoneighbors'
+    new_graph.instance.add_node(val)
+    assert not set(new_graph.instance.neighbors(val))
+
+
+def test_add_new_node_no_edges(new_graph):
+    """Test new node added without edges is not neighbor of any other node."""
+    val = 'newnodenoedges'
+    new_graph.instance.add_node(val)
+    other_neighbors = chain(*(new_graph.instance.neighbors(n)
+                              for n in new_graph.instance.nodes()))
+    assert val not in set(other_neighbors)

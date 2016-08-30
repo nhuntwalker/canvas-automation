@@ -23,6 +23,7 @@ EDGE_CASES = [
     (0,),
     (0, 1),
     (1, 0),
+    (1, ) * 100,  # all same value
     '',
     'a',
     'ab',

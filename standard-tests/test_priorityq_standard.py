@@ -23,11 +23,15 @@ MyQueueFixture = namedtuple(
 # priorities are all the same
 # mix of some same, some different
 
+# case where all vals are unique has vals
+
+
 EDGE_CASES = [
     (),
     (0,),
     (0, 1),
     (1, 0),
+    (0, ) * 100,  # all the same value
     '',
     'a',
     'ab',
@@ -102,9 +106,10 @@ def new_priorityq(request):
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method, new_priorityq):
+def test_has_method(method):
     """Test that queue has all the correct methods."""
-    assert hasattr(new_priorityq.instance, method)
+    from priorityq import PriorityQueue
+    assert hasattr(PriorityQueue(), method)
 
 
 def test_pop(new_priorityq):

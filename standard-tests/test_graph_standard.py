@@ -30,8 +30,8 @@ def _make_node_edge_combos(nodes):
     yield nodes, set()  # No edges
     if all_possible:
         yield nodes, all_possible  # All possible edges
-    #     for _ in range(max(len(all_possible), 10)):
-    #         edge_count = random.randrange(1, len(all_possible))
+        for _ in range(max(len(all_possible), 10)):
+            edge_count = random.randrange(1, len(all_possible))
     #         yield nodes, set(random.sample(all_possible, edge_count))
 
 

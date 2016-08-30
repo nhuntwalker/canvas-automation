@@ -70,11 +70,22 @@ def new_graph(request):
     else:
         pop_error = IndexError
 
-    return MyGraphFixture(instance, 'dict_', nodes, 'edges', pop_error)
+    return MyGraphFixture(instance, 'dict_', nodes, 'edges')
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
-    """Test that queue has all the correct methods."""
+    """Test that graph has all the correct methods."""
     from graph import Graph
     assert hasattr(Graph(), method)
+
+
+def test_nodes_unique(new_graph):
+    """Test that all graph's nodes are unique."""
+    nodes = new_graph.instance.nodes()
+    assert len(nodes) == len(set(nodes))
+
+
+def test_nodes(new_graph):
+    """Test that graph has all the inserted nodes."""
+    assert set(new_graph.instance.nodes()) == set(new_graph.nodes)

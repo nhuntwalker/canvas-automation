@@ -252,3 +252,28 @@ def test_adjacent_false(new_graph):
         pytest.skip()
     assert not any([new_graph.instance.adjacent(*edge)
                     for edge in new_graph.not_edges])
+
+
+def test_adjacent_error(new_graph):
+    """Test adjacent raises error when both given nodes are not in graph."""
+    val = 'totallynotingraph'
+    with pytest.raises(ValueError):
+        new_graph.instance.adjacent(val, val)
+
+
+def test_adjacent_error2(new_graph):
+    """Test adjacent raises error when first node not in graph."""
+    if new_graph.node_to_delete is None:
+        pytest.skip()
+    val = 'totallynotingraph'
+    with pytest.raises(ValueError):
+        new_graph.instance.adjacent(val, new_graph.node_to_delete)
+
+
+def test_adjacent_error3(new_graph):
+    """Test adjacent raises error when second node not in graph."""
+    if new_graph.node_to_delete is None:
+        pytest.skip()
+    val = 'totallynotingraph'
+    with pytest.raises(ValueError):
+        new_graph.instance.adjacent(new_graph.node_to_delete, val)

@@ -152,11 +152,11 @@ def test_edges(new_graph):
     assert set(new_graph.instance.edges()) == new_graph.edges
 
 
-# def test_neighbors_error(new_graph):
-#     """Test that neighbors raises an error when given node is not in graph."""
-#     val = 'nodenotingraph'
-#     with pytest.raises(ValueError):
-#         new_graph.instance.neighbors(val)
+def test_neighbors_error(new_graph):
+    """Test that neighbors raises an error when given node is not in graph."""
+    val = 'nodenotingraph'
+    with pytest.raises(ValueError):
+        new_graph.instance.neighbors(val)
 
 
 def test_add_new_node_no_neighbors(new_graph):
@@ -231,6 +231,14 @@ def test_del_edge_neighbors(new_graph):
     node1, node2 = new_graph.edge_to_delete
     new_graph.instance.del_edge(*new_graph.edge_to_delete)
     assert node2 not in new_graph.instance.neighbors(node1)
+
+
+def test_del_edge_adjacent(new_graph):
+    """Test that adjacent is false afer edge has been deleted."""
+    if new_graph.edge_to_delete is None:
+        pytest.skip()
+    new_graph.instance.del_edge(*new_graph.edge_to_delete)
+    assert not new_graph.instance.adjacent(*new_graph.edge_to_delete)
 
 
 def test_del_edge_error(new_graph):

@@ -221,3 +221,9 @@ def test_del_edge_error(new_graph):
     edge = ('nodenotingraphtodelete1', 'nodenotingraphtodelete1')
     with pytest.raises(ValueError):
         new_graph.instance.del_edge(*edge)
+
+
+def test_adjacent(new_graph):
+    """Test that adjacent returns expected values for connected edges."""
+    assert all([new_graph.instance.adjacent(*edge)
+                for edge in new_graph.edges])

@@ -3,7 +3,7 @@
 import random
 import string
 import pytest
-from itertools import product, chain
+from itertools import product, chain, permutations
 from collections import namedtuple
 
 REQ_METHODS = [
@@ -22,6 +22,26 @@ MyGraphFixture = namedtuple(
     'MyGraphFixture',
     ('instance', 'dict_', 'nodes', 'edges')
 )
+
+
+def _make_node_edge_combos(nodes):
+    """Generate different combinations of edges for the given nodes."""
+    all_possible = set(permutations(nodes, 2))
+    yield nodes, set()  # No edges
+    if all_possible:
+        yield nodes, all_possible  # All possible edges
+        for _ in range(max(len(all_possible), 10)):
+            edge_count = random.randrange(1, len(all_possible))
+            yield nodes, set(random.sample(all_possible, edge_count))
+
+
+def _make_graph_dict(nodes, edges):
+    """Make a dict representing the graph."""
+    dict_ = {}
+    for node in nodes:
+        dict_[node] = set(edge[1] for edge in edges if edge[0] == node)
+    return dict_
+
 
 EDGE_CASES = [
     (),
@@ -44,37 +64,27 @@ STR_TEST_CASES = (random.sample(string.printable,
 
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 
+# TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
 
-POP = (True, False)
 
-TEST_CASES = product(TEST_CASES, POP)
+# POP = (True, False)
+
+# TEST_CASES = product(TEST_CASES, POP)
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    nodes, pop = request.param
+    nodes, edges = None, None
+    # nodes, edges = request.param
+    # dict_ = _make_graph_dict(nodes, edges)
 
     instance = Graph()
-    for val in nodes:
+    for val in request.param:
         instance.add_node(val)
 
-    # if pop and nodes:
-    #     instance.pop()
-    #     nodes = nodes[:-1]
-
-    if nodes:
-        pop_error = None
-
-    else:
-        pop_error = IndexError
-
-    # testname = 'size={}'.format(len(nodes))
-    # request.node.name = testname
-    # request.node.nodeid = testname
-
-    return MyGraphFixture(instance, 'dict_', nodes, 'edges')
+    return MyGraphFixture(instance, 'dict_', nodes, edges)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -90,6 +100,6 @@ def test_nodes_unique(new_graph):
     assert len(nodes) == len(set(nodes))
 
 
-def test_nodes(new_graph):
-    """Test that graph has all the inserted nodes."""
-    assert set(new_graph.instance.nodes()) == set(new_graph.nodes)
+# def test_nodes(new_graph):
+#     """Test that graph has all the inserted nodes."""
+#     assert set(new_graph.instance.nodes()) == new_graph.nodes

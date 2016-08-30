@@ -86,9 +86,10 @@ def new_queue(request):
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method, new_queue):
+def test_has_method(method):
     """Test that queue has all the correct methods."""
-    assert hasattr(new_queue.instance, method)
+    from queue import Queue
+    assert hasattr(Queue(), method)
 
 
 def test_enqueue(new_queue):

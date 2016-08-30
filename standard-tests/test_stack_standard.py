@@ -75,9 +75,10 @@ def new_stack(request):
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method, new_stack):
+def test_has_method(method):
     """Test that queue has all the correct methods."""
-    assert hasattr(new_stack.instance, method)
+    from stack import Stack
+    assert hasattr(Stack(), method)
 
 
 def test_push(new_stack):

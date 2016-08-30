@@ -23,7 +23,7 @@ REQ_METHODS = [
 
 MyGraphFixture = namedtuple(
     'MyGraphFixture',
-    ('instance', 'dict_', 'nodes', 'edges', 'node_to_delete')
+    ('instance', 'dict_', 'nodes', 'edges', 'node_to_delete', 'edge_to_delete')
 )
 
 
@@ -94,12 +94,17 @@ def new_graph(request):
     for edge in edges:
         instance.add_edge(*edge)
 
-    if nodes:
+    try:
         node_to_delete = random.choice(list(nodes))
-    else:
+    except IndexError:
         node_to_delete = None
 
-    return MyGraphFixture(instance, dict_, nodes, edges, node_to_delete)
+    try:
+        edge_to_delete = random.choice(list(edges))
+    except IndexError:
+        edge_to_delete = None
+
+    return MyGraphFixture(instance, dict_, nodes, edges, node_to_delete, edge_to_delete)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -137,13 +142,6 @@ def test_edges(new_graph):
 #         new_graph.instance.neighbors(val)
 
 
-def test_del_node_error(new_graph):
-    """Test that del_node raises an error when node is not in graph."""
-    val = 'nodenotingraphtodelete'
-    with pytest.raises(ValueError):
-        new_graph.instance.del_node(val)
-
-
 def test_add_new_node_no_neighbors(new_graph):
     """Test new node added without edges is in the graph without neighbors."""
     val = 'newnodenoneighbors'
@@ -178,7 +176,48 @@ def test_add_edge_adds_nodes(new_graph):
 
 def test_del_node(new_graph):
     """Test that a node is no longer in the graph after deletion."""
+    if new_graph.node_to_delete is None:
+        pytest.skip()
+    new_graph.instance.del_node(new_graph.node_to_delete)
+    assert new_graph.node_to_delete not in new_graph.instance.nodes()
 
 
 def test_del_node_neighbors(new_graph):
     """Test deleted node is not a neighbor any other nodes."""
+    if new_graph.node_to_delete is None:
+        pytest.skip()
+    new_graph.instance.del_node(new_graph.node_to_delete)
+    other_neighbors = chain(*(new_graph.instance.neighbors(n)
+                              for n in new_graph.instance.nodes()))
+    assert new_graph.node_to_delete not in set(other_neighbors)
+
+
+def test_del_node_error(new_graph):
+    """Test that del_node raises an error when node is not in graph."""
+    val = 'nodenotingraphtodelete'
+    with pytest.raises(ValueError):
+        new_graph.instance.del_node(val)
+
+
+def test_del_edge(new_graph):
+    """Test that an edge is no longer in the graph after deletion."""
+    if new_graph.edge_to_delete is None:
+        pytest.skip()
+    new_graph.instance.del_edge(*new_graph.edge_to_delete)
+    assert new_graph.edge_to_delete not in new_graph.instance.edges()
+
+
+def test_del_edge_neighbors(new_graph):
+    """Test that del_edge removes second node from neighbors of first node."""
+    if new_graph.edge_to_delete is None:
+        pytest.skip()
+    node1, node2 = new_graph.edge_to_delete
+    new_graph.instance.del_edge(*new_graph.edge_to_delete)
+    assert node2 not in new_graph.instance.neighbors(node1)
+
+
+def test_del_edge_error(new_graph):
+    """Test that del_edge raises an error when node is not in graph."""
+    edge = ('nodenotingraphtodelete1', 'nodenotingraphtodelete1')
+    with pytest.raises(ValueError):
+        new_graph.instance.del_edge(*edge)

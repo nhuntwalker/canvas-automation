@@ -24,7 +24,6 @@ REQ_METHODS = [
 MyGraphFixture = namedtuple(
     'MyGraphFixture', (
         'instance',
-        'dict_',
         'nodes',
         'edges',
         'node_to_delete',
@@ -92,7 +91,6 @@ def new_graph(request):
     from graph import Graph
     # nodes, edges = None, None
     nodes, edges = request.param
-    dict_ = _make_graph_dict(nodes, edges)
 
     instance = Graph()
     for node in nodes:
@@ -115,7 +113,6 @@ def new_graph(request):
 
     return MyGraphFixture(
         instance,
-        dict_,
         nodes,
         edges,
         node_to_delete,

@@ -118,9 +118,10 @@ def new_deque(request):
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method, new_deque):
+def test_has_method(method):
     """Test that queue has all the correct methods."""
-    assert hasattr(new_deque.instance, method)
+    from deque import Deque
+    assert hasattr(Deque(), method)
 
 
 def test_appendleft_popleft(new_deque):

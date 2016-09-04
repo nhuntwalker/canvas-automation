@@ -50,6 +50,8 @@ def new_heap(request):
     """Return a new empty instance of MyQueue."""
     from binary_heap import BinaryHeap
     sequence, init, pop = request.param
+    # So that cases which are generators can be used more than once
+    sequence = list(sequence)
 
     if init:
         instance = BinaryHeap(sequence)
@@ -76,9 +78,10 @@ def new_heap(request):
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method, new_heap):
+def test_has_method(method):
     """Test that heap has all the correct methods."""
-    assert hasattr(new_heap.instance, method)
+    from bin_heap import BinHeap
+    assert hasattr(BinHeap(), method)
 
 
 @pytest.mark.parametrize('val', [1, False, True, None, Exception])

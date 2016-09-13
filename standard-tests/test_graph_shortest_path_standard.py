@@ -13,7 +13,7 @@ from heapq import heappop, heappush
 from itertools import count, chain, permutations
 from collections import namedtuple
 
-DJIK_NAME = 'djikstra'
+DIJK_NAME = 'dijkstra'
 
 REQ_METHODS = [
     'nodes',
@@ -25,7 +25,7 @@ REQ_METHODS = [
     'has_node',
     'neighbors',
     'adjacent',
-    DJIK_NAME,
+    DIJK_NAME,
 ]
 
 GraphFixture = namedtuple(
@@ -48,6 +48,7 @@ TraversableFixture = namedtuple(
         'end',
         'total_weight',
         'shortest_path',
+        'error',
     )
 )
 
@@ -98,8 +99,8 @@ def dijkstra_traversal(graph, start, end):
 
 def neighbors_with_weights(graph, node):
     """Need to implement."""
-    import pdb;pdb.set_trace()
-    pass
+    neighbors = graph.gnodes[node]
+    return neighbors.items()
 
 
 def _convert_path(path):
@@ -127,15 +128,15 @@ EDGE_CASES = [
 
 # lists of ints
 INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 20)) for n in range(10))
+                  random.randrange(2, 10)) for n in range(10))
 
 # strings
 STR_TEST_CASES = (random.sample(string.printable,
-                  random.randrange(2, 20)) for n in range(10))
+                  random.randrange(2, 10)) for n in range(10))
 
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 
-TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
+TEST_CASES = list(chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES)))
 
 
 # POP = (True, False)
@@ -194,9 +195,8 @@ TRAV_TEST_CASES = (
 @pytest.fixture(params=TRAV_TEST_CASES)
 def traversable_graph(request):
     """Fixture for testing shortest path between nodes in graph."""
-    nodes, edges, start, end = request.param
     from graph import Graph
-    nodes, edges = request.param
+    nodes, edges, start, end = request.param
 
     weighted_edges = set(e + (random.randrange(-999, 1000), ) for e in edges)
 
@@ -208,10 +208,33 @@ def traversable_graph(request):
         instance.add_edge(*edge)
 
     total_weight, shortest_path = dijkstra_traversal(instance, start, end)
+    if total_weight is None:
+        error = ValueError
+    else:
+        error = None
 
     return TraversableFixture(
-        instance, nodes, edges, start, end, total_weight, shortest_path,
+        instance, start, end, total_weight, shortest_path, error,
     )
+
+
+def test_dijkstra_valid(traversable_graph):
+    """Test that dijkstra returns the correct total distance and path."""
+    if traversable_graph.error is not None:
+        pytest.skip()
+    method = getattr(traversable_graph.instance, DIJK_NAME)
+    distance, path = method(traversable_graph.start, traversable_graph.end)
+    expected = traversable_graph.total_weight, traversable_graph.shortest_path
+    assert distance, path == expected
+
+
+def test_dijkstra_error(traversable_graph):
+    """Test that dijkstra returns the correct total distance and path."""
+    if traversable_graph.error is None:
+        pytest.skip()
+    method = getattr(traversable_graph.instance, DIJK_NAME)
+    with pytest.raises(traversable_graph.error):
+        distance, path = method(traversable_graph.start, traversable_graph.end)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

@@ -14,6 +14,7 @@ from itertools import count, chain, permutations
 from collections import namedtuple
 
 DIJK_NAME = 'dijkstra'
+ALG2_NAME = 'bellman'
 
 REQ_METHODS = [
     'nodes',
@@ -26,6 +27,7 @@ REQ_METHODS = [
     'neighbors',
     'adjacent',
     DIJK_NAME,
+    ALG2_NAME,
 ]
 
 GraphFixture = namedtuple(
@@ -46,8 +48,7 @@ TraversableFixture = namedtuple(
         'instance',
         'start',
         'end',
-        'total_weight',
-        'shortest_path',
+        'result',
         'error',
     )
 )
@@ -198,7 +199,7 @@ def traversable_graph(request):
     from graph import Graph
     nodes, edges, start, end = request.param
 
-    weighted_edges = set(e + (random.randrange(-999, 1000), ) for e in edges)
+    weighted_edges = set(e + (random.randrange(1000), ) for e in edges)
 
     instance = Graph()
     for node in nodes:
@@ -207,34 +208,25 @@ def traversable_graph(request):
     for edge in weighted_edges:
         instance.add_edge(*edge)
 
-    total_weight, shortest_path = dijkstra_traversal(instance, start, end)
-    if total_weight is None:
+    result = dijkstra_traversal(instance, start, end)
+    if result[0] is None:
         error = ValueError
     else:
         error = None
 
-    return TraversableFixture(
-        instance, start, end, total_weight, shortest_path, error,
-    )
+    return TraversableFixture(instance, start, end, result, error)
 
 
-def test_dijkstra_valid(traversable_graph):
+@pytest.mark.parametrize('method_name', (DIJK_NAME, ALG2_NAME))
+def test_dijkstra_valid(method_name, traversable_graph):
     """Test that dijkstra returns the correct total distance and path."""
-    if traversable_graph.error is not None:
-        pytest.skip()
-    method = getattr(traversable_graph.instance, DIJK_NAME)
-    distance, path = method(traversable_graph.start, traversable_graph.end)
-    expected = traversable_graph.total_weight, traversable_graph.shortest_path
-    assert distance, path == expected
-
-
-def test_dijkstra_error(traversable_graph):
-    """Test that dijkstra returns the correct total distance and path."""
+    method = getattr(traversable_graph.instance, method_name)
     if traversable_graph.error is None:
-        pytest.skip()
-    method = getattr(traversable_graph.instance, DIJK_NAME)
-    with pytest.raises(traversable_graph.error):
-        distance, path = method(traversable_graph.start, traversable_graph.end)
+        result = method(traversable_graph.start, traversable_graph.end)
+        assert result == traversable_graph.result
+    else:
+        with pytest.raises(traversable_graph.error):
+            result = method(traversable_graph.start, traversable_graph.end)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

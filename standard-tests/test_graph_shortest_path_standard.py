@@ -13,8 +13,12 @@ from heapq import heappop, heappush
 from itertools import count, chain, permutations
 from collections import namedtuple
 
-DIJK_NAME = 'dijkstra'
+DIJK_NAME = 'shortest_path_dijkstras'
 ALG2_NAME = 'bellman'
+ALG_NAMES = (
+    DIJK_NAME,
+    ALG2_NAME,
+)
 
 REQ_METHODS = [
     'nodes',
@@ -217,7 +221,7 @@ def traversable_graph(request):
     return TraversableFixture(instance, start, end, result, error)
 
 
-@pytest.mark.parametrize('method_name', (DIJK_NAME, ALG2_NAME))
+@pytest.mark.parametrize('method_name', ALG_NAMES)
 def test_dijkstra_valid(method_name, traversable_graph):
     """Test that dijkstra returns the correct total distance and path."""
     method = getattr(traversable_graph.instance, method_name)

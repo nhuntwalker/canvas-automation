@@ -7,8 +7,14 @@ from collections import namedtuple
 
 from cases import TEST_CASES
 
+# last inserted item is in there after insert
+# check balance after insert... possible to predict?
+# check depth after insert... possible to predict?
+# check invariant before and after insert
+
 MODULENAME = 'bst'
 CLASSNAME = 'BinaryTree'
+ROOT_ATTR = 'root'
 VAL_ATTR = 'value'
 LEFT_ATTR = 'left_child'
 RIGHT_ATTR = 'right_child'
@@ -38,17 +44,16 @@ BinaryTreeFixture = namedtuple(
 
 def _tree_checker(tree):
     """"Help function to check binary tree correctness."""
+    if tree is None:
+        return True
+
     this_val = getattr(tree, VAL_ATTR)
     left = getattr(tree, LEFT_ATTR)
     right = getattr(tree, RIGHT_ATTR)
-    left_val = getattr(left, VAL_ATTR)
-    right_val = getattr(right, VAL_ATTR)
 
-    if tree is None or this_val is None:
-        return True
-    if right is not None and right_val < this_val:
+    if right is not None and getattr(right, VAL_ATTR) < this_val:
         return False
-    if left is not None and left_val > this_val:
+    if left is not None and getattr(left, VAL_ATTR) > this_val:
         return False
 
     return all([_tree_checker(left), _tree_checker(right)])
@@ -101,6 +106,12 @@ def new_tree(request):
 def test_has_method(method):
     """Test that graph has all the correct methods."""
     assert hasattr(ClassDef(), method)
+
+
+def test_invariant(new_tree):
+    """Check tree against the tree invariant."""
+    root = getattr(new_tree.instance, ROOT_ATTR)
+    assert _tree_checker(root)
 
 
 def test_contains(new_tree):

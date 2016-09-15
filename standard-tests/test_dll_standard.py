@@ -14,8 +14,8 @@ REQ_METHODS = [
     'remove',
 ]
 
-MyDLLFixture = namedtuple(
-    'MyDLLFixture', (
+DLLFixture = namedtuple(
+    'DLLFixture', (
         'instance',
         'first',
         'last',
@@ -102,7 +102,7 @@ def new_dll(request):
 
     size = len(sequence)
     remove_error = ValueError
-    return MyDLLFixture(
+    return DLLFixture(
         instance,
         first,
         last,

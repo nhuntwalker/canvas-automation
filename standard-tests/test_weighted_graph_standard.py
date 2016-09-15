@@ -1,4 +1,4 @@
-"""Standardized tests for Stack data structure."""
+"""Standardized tests for Graph data structure with weighted edges."""
 
 from __future__ import unicode_literals
 
@@ -21,8 +21,8 @@ REQ_METHODS = [
     'adjacent',
 ]
 
-MyGraphFixture = namedtuple(
-    'MyGraphFixture', (
+GraphFixture = namedtuple(
+    'GraphFixture', (
         'instance',
         'nodes',
         'edges',
@@ -116,7 +116,7 @@ def new_graph(request):
 
     not_edges = set(permutations(nodes, 2)) - edges
 
-    return MyGraphFixture(
+    return GraphFixture(
         instance,
         nodes,
         edges,

@@ -1,4 +1,4 @@
-"""Test depth first and breadth first traversal."""
+"""Test depth first and breadth first traversal in Graph."""
 from __future__ import unicode_literals
 import pytest
 from itertools import repeat, chain

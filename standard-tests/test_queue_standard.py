@@ -13,8 +13,8 @@ REQ_METHODS = [
     'size',
 ]
 
-MyQueueFixture = namedtuple(
-    'MyQueueFixture',
+QueueFixture = namedtuple(
+    'QueueFixture',
     ('instance', 'first', 'last', 'sequence', 'dq_error', 'size')
 )
 
@@ -82,7 +82,7 @@ def new_queue(request):
         dq_error = IndexError
 
     size = len(sequence)
-    return MyQueueFixture(instance, first, last, sequence, dq_error, size)
+    return QueueFixture(instance, first, last, sequence, dq_error, size)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

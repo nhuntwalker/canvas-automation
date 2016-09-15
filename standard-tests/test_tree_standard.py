@@ -8,9 +8,6 @@ from itertools import permutations
 from collections import namedtuple
 
 from cases import TEST_CASES
-# from bst import BinaryTree
-
-# DSClass = BinaryTree
 
 MODULENAME = 'bst'
 CLASSNAME = 'BinaryTree'
@@ -38,15 +35,15 @@ BinaryTreeFixture = namedtuple(
 )
 
 
-def _check_depth(sorted_sequence):
+def _unbalanced_depth(sequence):
     """Get the depth and balance from a random sequence."""
-    size = len(sorted_sequence)
+    size = len(sequence)
     if size < 2:
         return size
-    mid_idx = size // 2
-    less = sorted_sequence[:mid_idx]
-    more = sorted_sequence[mid_idx + 1:]
-    return max(_check_depth(less), _check_depth(more)) + 1
+    current = sequence[0]
+    less = [i for i in sequence if i < current]
+    more = [i for i in sequence if i > current]
+    return max(_unbalanced_depth(less), _unbalanced_depth(more)) + 1
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
@@ -58,7 +55,7 @@ def new_tree(request):
     for item in sequence:
         instance.insert(item)
 
-    depth = 0
+    depth = _unbalanced_depth(sequence)
     balance = 0
 
     return BinaryTreeFixture(
@@ -85,4 +82,3 @@ def test_contains(new_tree):
 def test_size(new_tree):
     """Test that size method returns the expected size."""
     assert new_tree.instance.size() == new_tree.size
-

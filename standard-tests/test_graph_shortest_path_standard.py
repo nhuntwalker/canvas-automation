@@ -155,7 +155,6 @@ NOTFOUNDERROR = ValueError
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    # nodes, edges = None, None
     nodes, edges = request.param
 
     weighted_edges = set(e + (random.randrange(-999, 1000), ) for e in edges)
@@ -212,11 +211,13 @@ def traversable_graph(request):
     for edge in weighted_edges:
         instance.add_edge(*edge)
 
-    result = dijkstra_traversal(instance, start, end)
-    if result[0] is None:
+    distance, path = dijkstra_traversal(instance, start, end)
+    if distance is None:
         error = ValueError
     else:
         error = None
+
+    result = (distance, path)
 
     return TraversableFixture(instance, start, end, result, error)
 

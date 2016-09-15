@@ -88,7 +88,6 @@ TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    # nodes, edges = None, None
     nodes, edges = request.param
 
     instance = Graph()

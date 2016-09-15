@@ -37,13 +37,20 @@ BinaryTreeFixture = namedtuple(
 
 def _unbalanced_depth(sequence):
     """Get the depth and balance from a random sequence."""
-    size = len(sequence)
-    if size < 2:
-        return size
+    if len(sequence) < 2:
+        return len(sequence)
     current = sequence[0]
     less = [i for i in sequence if i < current]
     more = [i for i in sequence if i > current]
     return max(_unbalanced_depth(less), _unbalanced_depth(more)) + 1
+
+
+def _unbalanced_balance(sequence):
+    """Get the depth and balance from a random sequence."""
+    root = sequence[0]
+    left = [i for i in sequence if i < root]
+    right = [i for i in sequence if i > root]
+    return _unbalanced_depth(left) - _unbalanced_depth(right)
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)

@@ -151,6 +151,11 @@ def test_contains(new_tree):
     assert all((new_tree.instance.contains(i) for i in new_tree.sequence))
 
 
+def test_contains_false(new_tree):
+    """Test that tree contains all items pushed into it."""
+    assert not new_tree.instance.contains(new_tree.to_insert)
+
+
 def test_contains_after_insert(new_tree):
     """Check tree against the tree invariant after a new item is inserted."""
     new_tree.instance.insert(new_tree.to_insert)
@@ -185,4 +190,9 @@ def test_right_overbalance(new_tree):
         new_tree.instance.insert(item)
     assert new_tree.instance.balance() < new_tree.balance
 
-# Test that the same item inserted a second time does not increase size
+
+def test_no_duplicates(new_tree):
+    """Test that an item cannot be inserted into the tree a second time."""
+    new_tree.instance.insert(new_tree.to_insert)
+    new_tree.instance.insert(new_tree.to_insert)
+    assert new_tree.instance.size() == new_tree.size + 1

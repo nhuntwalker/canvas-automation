@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 from importlib import import_module
-from collections import namedtuple
+from collections import namedtuple, deque
 from inspect import isgenerator
 
 from cases import TEST_CASES, MIN_STR, MAX_STR, MIN_INT, MAX_INT
@@ -115,6 +115,23 @@ def _post_order(sequence):
         return list(sequence)
     current, less, more = _current_less_more(sequence)
     return _post_order(less) + _post_order(more) + [current]
+
+
+def _breadth_first(tree):
+    """Get the expected breadth-first traversal for a given tree."""
+    output = []
+    root = getattr(tree, ROOT_ATTR)
+    if root is None:
+        return output
+    queue = deque([root])
+    while queue:
+        current = queue.pop()
+        output.append(getattr(current, VAL_ATTR))
+        for attr_name in (LEFT_ATTR, RIGHT_ATTR):
+            node = getattr(current, attr_name)
+            if node is not None:
+                queue.appendleft(node)
+    return output
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
@@ -236,9 +253,15 @@ def test_traversal_generator(method_name, new_tree):
     assert isgenerator(method())
 
 
-@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS[:-1])
 def test_traversals(method_name, new_tree):
     """Test that in-order traversal generates values in sorted order."""
     method = getattr(new_tree.instance, method_name)
     canon = globals()['_' + method_name]
     assert list(method()) == canon(new_tree.sequence)
+
+
+def test_breadth_first(new_tree):
+    """Test that breadth first traversal happens as expected."""
+    expected = _breadth_first(new_tree.instance)
+    assert list(new_tree.instance.breadth_first()) == expected

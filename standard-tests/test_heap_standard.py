@@ -1,8 +1,5 @@
 """Standardized tests for the Heap data structure."""
 
-# intialize by __init__
-# initialize by pushing one at a time
-
 import random
 import pytest
 from itertools import product, chain
@@ -13,8 +10,8 @@ REQ_METHODS = [
     'pop',
 ]
 
-MyHeapFixture = namedtuple(
-    'MyStackFixture',
+HeapFixture = namedtuple(
+    'HeapFixture',
     ('instance', 'pop_value', 'sorted_sequence', 'pop_error')
 )
 
@@ -74,14 +71,14 @@ def new_heap(request):
         pop_value = None
         pop_error = IndexError
 
-    return MyHeapFixture(instance, pop_value, sorted_sequence, pop_error)
+    return HeapFixture(instance, pop_value, sorted_sequence, pop_error)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that heap has all the correct methods."""
-    from bin_heap import BinHeap
-    assert hasattr(BinHeap(), method)
+    from binary_heap import BinaryHeap
+    assert hasattr(BinaryHeap(), method)
 
 
 @pytest.mark.parametrize('val', [1, False, True, None, Exception])

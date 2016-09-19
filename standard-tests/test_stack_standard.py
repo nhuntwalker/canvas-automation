@@ -11,8 +11,8 @@ REQ_METHODS = [
     'pop',
 ]
 
-MyQueueFixture = namedtuple(
-    'MyStackFixture',
+StackFixture = namedtuple(
+    'StackFixture',
     ('instance', 'first', 'last', 'sequence', 'pop_error')
 )
 
@@ -71,7 +71,7 @@ def new_stack(request):
         last = None
         pop_error = IndexError
 
-    return MyQueueFixture(instance, first, last, sequence, pop_error)
+    return StackFixture(instance, first, last, sequence, pop_error)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

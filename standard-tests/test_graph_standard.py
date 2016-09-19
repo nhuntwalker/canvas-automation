@@ -1,12 +1,11 @@
-"""Standardized tests for Stack data structure."""
+"""Standardized tests for Graph data structure."""
 
 from __future__ import unicode_literals
 
 import random
 import string
 import pytest
-from hashlib import md5
-from itertools import product, chain, permutations
+from itertools import chain, permutations
 from collections import namedtuple
 
 REQ_METHODS = [
@@ -21,8 +20,8 @@ REQ_METHODS = [
     'adjacent',
 ]
 
-MyGraphFixture = namedtuple(
-    'MyGraphFixture', (
+GraphFixture = namedtuple(
+    'GraphFixture', (
         'instance',
         'nodes',
         'edges',
@@ -89,7 +88,6 @@ TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    # nodes, edges = None, None
     nodes, edges = request.param
 
     instance = Graph()
@@ -111,7 +109,7 @@ def new_graph(request):
 
     not_edges = set(permutations(nodes, 2)) - edges
 
-    return MyGraphFixture(
+    return GraphFixture(
         instance,
         nodes,
         edges,

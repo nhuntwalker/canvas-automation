@@ -1,13 +1,24 @@
-"""Standardized tests for Graph data structure with weighted edges."""
+"""Standardized tests for Graph data structure with shortest path algorithm.
 
+Dijkstra algorithm borrowed from Kent Ross and Iris Carerra's implementation at
+https://github.com/Mumbleskates/data-structures/blob/master/src/data_structures/weightedg.py
+"""
 from __future__ import unicode_literals
+
 
 import random
 import string
 import pytest
-from hashlib import md5
-from itertools import product, chain, permutations
+from heapq import heappop, heappush
+from itertools import count, chain, permutations
 from collections import namedtuple
+
+DIJK_NAME = 'shortest_path_dijkstras'
+ALG2_NAME = 'bellman'
+ALG_NAMES = (
+    DIJK_NAME,
+    ALG2_NAME,
+)
 
 REQ_METHODS = [
     'nodes',
@@ -19,6 +30,8 @@ REQ_METHODS = [
     'has_node',
     'neighbors',
     'adjacent',
+    DIJK_NAME,
+    ALG2_NAME,
 ]
 
 GraphFixture = namedtuple(
@@ -30,6 +43,17 @@ GraphFixture = namedtuple(
         'node_to_delete',
         'edge_to_delete',
         'not_edges',
+    )
+)
+
+
+TraversableFixture = namedtuple(
+    'TraversableFixture', (
+        'instance',
+        'start',
+        'end',
+        'result',
+        'error',
     )
 )
 
@@ -49,13 +73,52 @@ def _make_node_edge_combos(nodes):
             yield nodes, set(edges)
 
 
-def _make_graph_dict(nodes, edges):
-    """Make a dict representing the graph."""
-    dict_ = {}
-    for node in nodes:
-        dict_[node] = set(edge[1] for edge in edges if edge[0] == node)
-    return dict_
+def dijkstra_traversal(graph, start, end):
+    """
+    Return a tuple of the total distance and the path taken to travel.
 
+    From the given start to end in the graph.
+    The value returned is a 2-tuple of:
+    (cumulative distance, a list of nodes visited in order).
+    If the given start does not exist in the graph, a KeyError is raised.
+    If there is no path from start to end in the graph,
+    the cumulative weight will be None and the path returned will be empty.
+    """
+    unique = count()
+    visited = set()
+    heap = [(0, None, start, ())]
+    while heap:
+        cumulative_weight, _, node, path = heappop(heap)
+        if node not in visited:
+            path = node, path
+            if node == end:
+                return cumulative_weight, _convert_path(path)
+            visited.add(node)
+
+            for neighbor, edge_weight in neighbors_with_weights(graph, node):
+                tup = (cumulative_weight + edge_weight,
+                       next(unique), neighbor, path)
+                heappush(heap, tup)
+    return None, []
+
+
+def neighbors_with_weights(graph, node):
+    """Need to implement."""
+    neighbors = graph.gnodes[node]
+    return neighbors.items()
+
+
+def _convert_path(path):
+    """Convert a reverse linked tuple path  to a forwards list.
+
+    e.g. (3, (2, (1, ()))) -> [1, 2, 3]
+    """
+    result = []
+    while path:
+        result.append(path[0])
+        path = path[1]
+    result.reverse()
+    return result
 
 EDGE_CASES = [
     (),
@@ -70,15 +133,15 @@ EDGE_CASES = [
 
 # lists of ints
 INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 20)) for n in range(10))
+                  random.randrange(2, 10)) for n in range(10))
 
 # strings
 STR_TEST_CASES = (random.sample(string.printable,
-                  random.randrange(2, 20)) for n in range(10))
+                  random.randrange(2, 10)) for n in range(10))
 
 TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 
-TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
+TEST_CASES = list(chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES)))
 
 
 # POP = (True, False)
@@ -92,7 +155,6 @@ NOTFOUNDERROR = ValueError
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
     from graph import Graph
-    # nodes, edges = None, None
     nodes, edges = request.param
 
     weighted_edges = set(e + (random.randrange(-999, 1000), ) for e in edges)
@@ -125,6 +187,51 @@ def new_graph(request):
         edge_to_delete,
         not_edges,
     )
+
+
+TRAV_TEST_CASES = (
+    (nodes, edges, start, end)
+    for nodes, edges in TEST_CASES
+    for start, end in permutations(nodes, 2)
+)
+
+
+@pytest.fixture(params=TRAV_TEST_CASES)
+def traversable_graph(request):
+    """Fixture for testing shortest path between nodes in graph."""
+    from graph import Graph
+    nodes, edges, start, end = request.param
+
+    weighted_edges = set(e + (random.randrange(1000), ) for e in edges)
+
+    instance = Graph()
+    for node in nodes:
+        instance.add_node(node)
+
+    for edge in weighted_edges:
+        instance.add_edge(*edge)
+
+    distance, path = dijkstra_traversal(instance, start, end)
+    if distance is None:
+        error = ValueError
+    else:
+        error = None
+
+    result = (distance, path)
+
+    return TraversableFixture(instance, start, end, result, error)
+
+
+@pytest.mark.parametrize('method_name', ALG_NAMES)
+def test_dijkstra_valid(method_name, traversable_graph):
+    """Test that dijkstra returns the correct total distance and path."""
+    method = getattr(traversable_graph.instance, method_name)
+    if traversable_graph.error is None:
+        result = method(traversable_graph.start, traversable_graph.end)
+        assert result == traversable_graph.result
+    else:
+        with pytest.raises(traversable_graph.error):
+            result = method(traversable_graph.start, traversable_graph.end)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -288,3 +395,4 @@ def test_adjacent_error3(new_graph):
     val = 'totallynotingraph'
     with pytest.raises(NOTFOUNDERROR):
         new_graph.instance.adjacent(new_graph.node_to_delete, val)
+

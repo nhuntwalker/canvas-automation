@@ -1,4 +1,4 @@
-"""Standardized tests for Queue data structure."""
+"""Standardized tests for Priority Queue data structure."""
 
 import random
 import string
@@ -13,8 +13,8 @@ REQ_METHODS = [
     'peek',
 ]
 
-MyQueueFixture = namedtuple(
-    'MyQueueFixture',
+PQueueFixture = namedtuple(
+    'PQueueFixture',
     ('instance', 'first', 'last', 'sorted_sequence', 'pop_error')
 )
 
@@ -102,7 +102,7 @@ def new_priorityq(request):
         last = None
         pop_error = IndexError
 
-    return MyQueueFixture(instance, first, last, sorted_sequence, pop_error)
+    return PQueueFixture(instance, first, last, sorted_sequence, pop_error)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)

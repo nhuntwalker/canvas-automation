@@ -16,8 +16,8 @@ REQ_METHODS = [
     'size',
 ]
 
-MyDequeFixture = namedtuple(
-    'MyDequeFixture', (
+DequeFixture = namedtuple(
+    'DequeFixture', (
         'instance',
         'first',
         'last',
@@ -104,7 +104,7 @@ def new_deque(request):
 
     size = len(sequence)
     remove_error = ValueError
-    return MyDequeFixture(
+    return DequeFixture(
         instance,
         first,
         last,

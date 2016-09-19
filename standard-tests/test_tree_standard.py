@@ -17,8 +17,8 @@ LEFT_ATTR = 'left'
 RIGHT_ATTR = 'right'
 PARENT_ATTR = 'parent'
 
-# module = import_module(MODULENAME)
-# ClassDef = getattr(module, CLASSNAME)
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
 
 
 REQ_METHODS = [
@@ -91,6 +91,14 @@ def _unbalanced_balance(sequence):
     except IndexError:
         return 0
     return _unbalanced_depth(left) - _unbalanced_depth(right)
+
+
+def _in_order(sequence):
+    """Get the expected in-order traversal from a random sequence."""
+    if len(sequence) < 2:
+        return list(sequence)
+    current, less, more = _current_less_more(sequence)
+    return _in_order(less) + [current] + _in_order(more)
 
 
 def _pre_order(sequence):
@@ -228,8 +236,9 @@ def test_traversal_generator(method_name, new_tree):
     assert isgenerator(method())
 
 
-def test_in_order(new_tree):
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_traversals(method_name, new_tree):
     """Test that in-order traversal generates values in sorted order."""
-    expected = list(sorted(new_tree.sequence))
-    result = list(new_tree.instance.in_order())
-    assert result == expected
+    method = getattr(new_tree.instance, method_name)
+    canon = globals()['_' + method_name]
+    assert list(method()) == canon(new_tree.sequence)

@@ -12,8 +12,8 @@ MODULENAME = 'bst'
 CLASSNAME = 'BinaryTree'
 ROOT_ATTR = 'root'
 VAL_ATTR = 'value'
-LEFT_ATTR = 'left_child'
-RIGHT_ATTR = 'right_child'
+LEFT_ATTR = 'left'
+RIGHT_ATTR = 'right'
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -79,22 +79,6 @@ def _unbalanced_balance(sequence):
     return _unbalanced_depth(left) - _unbalanced_depth(right)
 
 
-def _left_overbalance_str():
-    """Generate string values to create long tail on the left side of tree."""
-    for n in range(100, 0, -1):
-        yield MIN_STR * n
-
-
-def _right_overbalance_str():
-    """Generate string values to create long tail on the left side of tree."""
-    for n in range(1, 101):
-        yield MAX_STR * n
-
-
-_left_overbalance_int = range(MIN_INT, MIN_INT - 100, -1)
-_right_overbalance_int = range(MAX_INT, MAX_INT + 100)
-
-
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_tree(request):
     """Return a new empty instance of MyQueue."""
@@ -109,12 +93,12 @@ def new_tree(request):
     balance = _unbalanced_balance(sequence)
 
     if not sequence or isinstance(sequence[0], int):
-        left_overbalance = _left_overbalance_int
-        right_overbalance = _right_overbalance_int
+        left_overbalance = range(MIN_INT, MIN_INT - 100, -1)
+        right_overbalance = range(MAX_INT, MAX_INT + 100)
         to_insert = MAX_INT
     elif isinstance(sequence[0], str):
-        left_overbalance = _left_overbalance_str
-        right_overbalance = _right_overbalance_str
+        left_overbalance = (MIN_STR * n for n in range(100, 0, -1))
+        right_overbalance = (MAX_STR * n for n in range(1, 101))
         to_insert = 'superuniquestring'
 
     return BinaryTreeFixture(
@@ -142,7 +126,7 @@ def test_invariant(new_tree):
 
 def test_invariant_after_insert(new_tree):
     """Check tree against the tree invariant after a new item is inserted."""
-    new_tree.instance.instance(new_tree.to_insert)
+    new_tree.instance.insert(new_tree.to_insert)
     assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
 
 

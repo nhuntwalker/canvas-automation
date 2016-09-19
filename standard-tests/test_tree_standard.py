@@ -14,6 +14,7 @@ ROOT_ATTR = 'root'
 VAL_ATTR = 'value'
 LEFT_ATTR = 'left'
 RIGHT_ATTR = 'right'
+PARENT_ATTR = 'parent'
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)

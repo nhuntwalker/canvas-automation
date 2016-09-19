@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 from importlib import import_module
 from collections import namedtuple
+from inspect import isgenerator
 
 from cases import TEST_CASES, MIN_STR, MAX_STR, MIN_INT, MAX_INT
 
@@ -16,8 +17,8 @@ LEFT_ATTR = 'left'
 RIGHT_ATTR = 'right'
 PARENT_ATTR = 'parent'
 
-module = import_module(MODULENAME)
-ClassDef = getattr(module, CLASSNAME)
+# module = import_module(MODULENAME)
+# ClassDef = getattr(module, CLASSNAME)
 
 
 REQ_METHODS = [
@@ -27,6 +28,14 @@ REQ_METHODS = [
     'depth',
     'balance',
 ]
+
+TRAVERSAL_METHODS = [
+    'in_order',
+    'pre_order',
+    'post_order',
+    'breadth_first',
+]
+
 
 BinaryTreeFixture = namedtuple(
     'BinaryTreeFixture', (
@@ -59,25 +68,45 @@ def _tree_checker(tree):
     return all([_tree_checker(left), _tree_checker(right)])
 
 
+def _current_less_more(sequence):
+    """Return tuple of (first item, less-than items, more-than items)."""
+    current = sequence[0]
+    less = [i for i in sequence if i < current]
+    more = [i for i in sequence if i > current]
+    return current, less, more
+
+
 def _unbalanced_depth(sequence):
     """Get the depth and balance from a random sequence."""
     if len(sequence) < 2:
         return len(sequence)
-    current = sequence[0]
-    less = [i for i in sequence if i < current]
-    more = [i for i in sequence if i > current]
+    current, less, more = _current_less_more(sequence)
     return max(_unbalanced_depth(less), _unbalanced_depth(more)) + 1
 
 
 def _unbalanced_balance(sequence):
     """Get the depth and balance from a random sequence."""
     try:
-        root = sequence[0]
+        root, left, right = _current_less_more(sequence)
     except IndexError:
         return 0
-    left = [i for i in sequence if i < root]
-    right = [i for i in sequence if i > root]
     return _unbalanced_depth(left) - _unbalanced_depth(right)
+
+
+def _pre_order(sequence):
+    """Get the expected pre-order traversal from a random sequence."""
+    if len(sequence) < 2:
+        return list(sequence)
+    current, less, more = _current_less_more(sequence)
+    return [current] + _pre_order(less) + _pre_order(more)
+
+
+def _post_order(sequence):
+    """Get the expected post-order traversal from a random sequence."""
+    if len(sequence) < 2:
+        return list(sequence)
+    current, less, more = _current_less_more(sequence)
+    return _post_order(less) + _post_order(more) + [current]
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
@@ -114,10 +143,10 @@ def new_tree(request):
     )
 
 
-@pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method):
+@pytest.mark.parametrize('method_name', REQ_METHODS)
+def test_has_method(method_name):
     """Test that graph has all the correct methods."""
-    assert hasattr(ClassDef(), method)
+    assert hasattr(ClassDef(), method_name)
 
 
 def test_invariant(new_tree):
@@ -181,3 +210,26 @@ def test_no_duplicates(new_tree):
     new_tree.instance.insert(new_tree.to_insert)
     new_tree.instance.insert(new_tree.to_insert)
     assert new_tree.instance.size() == new_tree.size + 1
+
+
+# Traversal tests
+
+
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_has_traversal_method(method_name):
+    """Test that graph has all the correct methods."""
+    assert hasattr(ClassDef(), method_name)
+
+
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_traversal_generator(method_name, new_tree):
+    """Test that all traversal methods always return generators."""
+    method = getattr(new_tree.instance, method_name)
+    assert isgenerator(method())
+
+
+def test_in_order(new_tree):
+    """Test that in-order traversal generates values in sorted order."""
+    expected = list(sorted(new_tree.sequence))
+    result = list(new_tree.instance.in_order())
+    assert result == expected

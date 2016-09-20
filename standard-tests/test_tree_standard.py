@@ -27,6 +27,7 @@ REQ_METHODS = [
     'size',
     'depth',
     'balance',
+    'delete',
 ]
 
 TRAVERSAL_METHODS = [
@@ -36,6 +37,7 @@ TRAVERSAL_METHODS = [
     'breadth_first',
 ]
 
+REQ_METHODS.extend(TRAVERSAL_METHODS)
 
 BinaryTreeFixture = namedtuple(
     'BinaryTreeFixture', (
@@ -47,6 +49,11 @@ BinaryTreeFixture = namedtuple(
         'left_overbalance',
         'right_overbalance',
         'to_insert',
+        'to_delete',
+        'sequence_after_delete',
+        'depth_after_delete',
+        'balance_after_delete',
+        'size_after_delete',
     )
 )
 
@@ -134,11 +141,23 @@ def _breadth_first(tree):
     return output
 
 
-@pytest.fixture(scope='function', params=TEST_CASES)
+# Test deleting every single item in every single test case.
+
+def _setup_to_delete(cases):
+    """Setup tests to delete every possible item in test sequence."""
+    for sequence in cases:
+        if not sequence:
+            yield (sequence, None)
+        else:
+            for item in sequence:
+                yield (sequence, item)
+
+
+@pytest.fixture(scope='function', params=_setup_to_delete(TEST_CASES))
 def new_tree(request):
     """Return a new empty instance of MyQueue."""
+    sequence, to_delete = request.param
     instance = ClassDef()
-    sequence = request.param
     size = len(sequence)
 
     for item in sequence:
@@ -156,6 +175,15 @@ def new_tree(request):
         right_overbalance = (MAX_STR * n for n in range(1, 101))
         to_insert = 'superuniquestring'
 
+    sequence_after_delete = list(sequence)
+    try:
+        sequence_after_delete.remove(to_delete)
+    except ValueError:
+        pass
+    size_after_delete = len(sequence_after_delete)
+    depth_after_delete = _unbalanced_depth(sequence_after_delete)
+    balance_after_delete = _unbalanced_balance(sequence_after_delete)
+
     return BinaryTreeFixture(
         instance,
         sequence,
@@ -165,6 +193,11 @@ def new_tree(request):
         left_overbalance,
         right_overbalance,
         to_insert,
+        to_delete,
+        sequence_after_delete,
+        depth_after_delete,
+        balance_after_delete,
+        size_after_delete,
     )
 
 
@@ -241,12 +274,6 @@ def test_no_duplicates(new_tree):
 
 
 @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-def test_has_traversal_method(method_name):
-    """Test that graph has all the correct methods."""
-    assert hasattr(ClassDef(), method_name)
-
-
-@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
 def test_traversal_generator(method_name, new_tree):
     """Test that all traversal methods always return generators."""
     method = getattr(new_tree.instance, method_name)
@@ -265,3 +292,40 @@ def test_breadth_first(new_tree):
     """Test that breadth first traversal happens as expected."""
     expected = _breadth_first(new_tree.instance)
     assert list(new_tree.instance.breadth_first()) == expected
+
+
+# Deletion tests
+
+def invariant_after_delete(new_tree):
+    """Test that tree still conforms to invariant after deletion."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert _tree_checker(new_tree)
+
+
+def test_deleted_not_contained(new_tree):
+    """Test that deleted item is not in the tree after deletion."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert not new_tree.contains(new_tree.to_delete)
+
+
+def test_contains_after_delete(new_tree):
+    """Test that all other items are still contained by tree after deletion."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert all((
+        new_tree.contains(item) for item in new_tree.sequence_after_delete
+    ))
+
+
+def test_size_after_delete(new_tree):
+    """Test that tree size is correct after deletion of item."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert new_tree.instance.size() == new_tree.size_after_delete
+
+
+def test_balance_after_delete(new_tree):
+    """Test that tree balance is correct after deletion of item."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert new_tree.instance.balance() == new_tree.balance_after_delete
+
+
+# node can be added then deleted;

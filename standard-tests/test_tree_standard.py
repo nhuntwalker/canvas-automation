@@ -296,30 +296,44 @@ def test_breadth_first(new_tree):
 
 # Deletion tests
 
-def invariant_after_delete(new_tree):
+
+def test_delete_not_in_tree(new_tree):
+    """Test that trying to delete something not in the tree does nothing."""
+    new_tree.instance.delete(new_tree.to_insert)
+    assert all([new_tree.instance.size() == new_tree.size,
+                new_tree.instance.depth() == new_tree.depth,
+                new_tree.instance.balance() == new_tree.balance])
+
+
+def test_invariant_after_delete(new_tree):
     """Test that tree still conforms to invariant after deletion."""
     new_tree.instance.delete(new_tree.to_delete)
-    assert _tree_checker(new_tree)
+    assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
 
 
 def test_deleted_not_contained(new_tree):
     """Test that deleted item is not in the tree after deletion."""
     new_tree.instance.delete(new_tree.to_delete)
-    assert not new_tree.contains(new_tree.to_delete)
+    assert not new_tree.instance.contains(new_tree.to_delete)
 
 
 def test_contains_after_delete(new_tree):
     """Test that all other items are still contained by tree after deletion."""
     new_tree.instance.delete(new_tree.to_delete)
-    assert all((
-        new_tree.contains(item) for item in new_tree.sequence_after_delete
-    ))
+    assert all([new_tree.instance.contains(item)
+                for item in new_tree.sequence_after_delete])
 
 
 def test_size_after_delete(new_tree):
     """Test that tree size is correct after deletion of item."""
     new_tree.instance.delete(new_tree.to_delete)
     assert new_tree.instance.size() == new_tree.size_after_delete
+
+
+def test_depth_after_delete(new_tree):
+    """Test that tree size is correct after deletion of item."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert new_tree.instance.depth() == new_tree.depth_after_delete
 
 
 def test_balance_after_delete(new_tree):

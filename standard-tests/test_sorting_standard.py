@@ -19,4 +19,5 @@ funcdef = getattr(module, FUNCNAME)
 @pytest.mark.parametrize('sequence', TEST_CASES)
 def test_sort(sequence):
     """Test that submitted sorting algo produces same result as builtin."""
+    sequence = list(sequence)
     assert funcdef(sequence) == sorted(sequence)

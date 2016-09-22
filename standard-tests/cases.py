@@ -18,6 +18,8 @@ INT_EDGE_CASES = [
     (0,),
     (0, 1),
     (1, 0),
+    range(100),
+    range(99, -1, -1),
 ]
 
 STR_EDGE_CASES = [
@@ -25,6 +27,8 @@ STR_EDGE_CASES = [
     'a',
     'ab',
     'ba',
+    string.ascii_letters,
+    ''.join(reversed(string.ascii_letters)),
 ]
 
 # lists of ints

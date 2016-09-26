@@ -5,6 +5,7 @@ from cases import TEST_CASES
 from importlib import import_module
 
 
+IN_PLACE = True
 MODULENAME = 'insertion_sort'
 FUNCNAME = 'insertion_sort'
 
@@ -20,4 +21,8 @@ funcdef = getattr(module, FUNCNAME)
 def test_sort(sequence):
     """Test that submitted sorting algo produces same result as builtin."""
     sequence = list(sequence)
-    assert funcdef(sequence) == sorted(sequence)
+    if IN_PLACE:
+        funcdef(sequence)
+        assert sequence == sorted(sequence)
+    else:
+        assert funcdef(sequence) == sorted(sequence)

@@ -4,6 +4,16 @@ import random
 import string
 from itertools import chain
 
+
+def _random_with_dupes(sequence):
+    """Return a random sequence including duplicates."""
+    part1 = random.sample(sequence, 50)
+    part2 = random.sample(part1, random.randrange(1, 50))
+    result = part1 + part2
+    random.shuffle(result)
+    return result
+
+
 # reserving '0' for less-than string comparisons
 # reserving '~' for greater-than string comparisons
 STR_CHARS = sorted(string.printable)
@@ -20,6 +30,8 @@ INT_EDGE_CASES = [
     (1, 0),
     range(100),
     range(99, -1, -1),
+    [1] * 100,
+    _random_with_dupes(range(100))
 ]
 
 STR_EDGE_CASES = [
@@ -29,6 +41,8 @@ STR_EDGE_CASES = [
     'ba',
     string.ascii_letters,
     ''.join(reversed(string.ascii_letters)),
+    'b' * 100,
+    _random_with_dupes(STR_CHARS)
 ]
 
 # lists of ints

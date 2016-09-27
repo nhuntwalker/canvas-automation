@@ -30,7 +30,7 @@ INT_EDGE_CASES = [
     (1, 0),
     range(100),
     range(99, -1, -1),
-    [1] * 100,
+    [1] * 10,
     _random_with_dupes(range(100))
 ]
 
@@ -41,7 +41,7 @@ STR_EDGE_CASES = [
     'ba',
     string.ascii_letters,
     ''.join(reversed(string.ascii_letters)),
-    'b' * 100,
+    'b' * 10,
     _random_with_dupes(STR_CHARS)
 ]
 

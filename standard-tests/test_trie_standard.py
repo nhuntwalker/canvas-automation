@@ -51,6 +51,7 @@ def _make_words():
                 yield output_words
                 active_idx = idx + random.randrange(2000)
                 output_words = []
+        yield output_words
 
 
 TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())

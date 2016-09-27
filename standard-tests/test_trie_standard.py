@@ -28,6 +28,8 @@ TrieFixture = namedtuple(
         'instance',
         'sequence',
         'to_insert',
+        'contain_false_shorter',
+        'contain_false_longer',
     )
 )
 
@@ -40,18 +42,23 @@ def _trie_checker(tree):
 
 def _make_words():
     """Create lists of similar words from dictionary."""
-    active_idx = random.randrange(2000)
-    output_words = []
+    sample_idx = random.randrange(2000)
+    similar_words = []
+    different_words = []
+
     with open('/usr/share/dict/words') as words:
         for idx, word in enumerate(words):
             word = word.strip()
-            if active_idx <= idx <= active_idx + 99:
-                output_words.append(word)
-            elif idx > active_idx + 99:
-                yield output_words
-                active_idx = idx + random.randrange(2000)
-                output_words = []
-        yield output_words
+            if idx == sample_idx:
+                different_words.append(word)
+            if sample_idx <= idx <= sample_idx + 99:
+                similar_words.append(word)
+            elif idx > sample_idx + 99:
+                yield similar_words
+                sample_idx = idx + random.randrange(2000)
+                similar_words = []
+        yield similar_words
+        yield different_words
 
 
 TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())
@@ -61,6 +68,7 @@ TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())
 def new_trie(request):
     """Return a new empty instance of MyQueue."""
     sequence = request.param
+    sequence_set = set(sequence)
     instance = ClassDef()
 
     for item in sequence:
@@ -68,10 +76,24 @@ def new_trie(request):
 
     to_insert = 'superuniquestring'
 
+    longest = max(sequence, key=len)
+    contain_false_longer = longest + 'more'
+
+    contain_false_shorter = longest
+
+    while contain_false_shorter:
+        contain_false_shorter = contain_false_shorter[:-1]
+        if contain_false_shorter not in sequence_set:
+            break
+    else:
+        contain_false_shorter = 'superuniquestring'
+
     return TrieFixture(
         instance,
         sequence,
         to_insert,
+        contain_false_shorter,
+        contain_false_longer,
     )
 
 
@@ -84,6 +106,16 @@ def test_has_method(method_name):
 def test_contains_all(new_trie):
     """Check that every item in the sequence is contained within the Trie."""
     assert all((new_trie.instance.contains(val) for val in new_trie.sequence))
+
+
+def test_contains_false_shorter(new_trie):
+    """Check that an item similar to one in Trie but shorter returns False."""
+    assert not new_trie.instance.contains(new_trie.contain_false_shorter)
+
+
+def test_contains_false_longer(new_trie):
+    """Check that an item similar to one in Trie but longer returns False."""
+    assert not new_trie.instance.contains(new_trie.contain_false_longer)
 
 
 def test_insert(new_trie):

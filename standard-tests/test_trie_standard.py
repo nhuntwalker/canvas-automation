@@ -2,17 +2,16 @@
 from __future__ import unicode_literals
 
 import pytest
-from importlib import import_module
+import random
 from itertools import chain
 from collections import namedtuple
+from importlib import import_module
 
-from cases import STR_EDGE_CASES, STR_TEST_CASES, MIN_STR, MAX_STR
-TEST_CASES = chain(STR_EDGE_CASES, STR_TEST_CASES)
-
+from cases import STR_EDGE_CASES
 MODULENAME = 'trie'
 CLASSNAME = 'Trie'
 ROOT_ATTR = 'root'
-
+END_CHAR = '$'
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -37,6 +36,24 @@ def _trie_checker(tree):
     """"Help function to check trie correctness."""
     if tree is None:
         return True
+
+
+def _make_words():
+    """Create lists of similar words from dictionary."""
+    active_idx = random.randrange(2000)
+    output_words = []
+    with open('/usr/share/dict/words') as words:
+        for idx, word in enumerate(words):
+            word = word.strip()
+            if active_idx <= idx <= active_idx + 99:
+                output_words.append(word)
+            elif idx > active_idx + 99:
+                yield output_words
+                active_idx = idx + random.randrange(2000)
+                output_words = []
+
+
+TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)

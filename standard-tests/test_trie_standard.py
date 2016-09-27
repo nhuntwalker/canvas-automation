@@ -34,21 +34,19 @@ TrieFixture = namedtuple(
 )
 
 
-def _trie_checker(tree):
-    """"Help function to check trie correctness."""
-    if tree is None:
-        return True
-
-
 def _make_words():
     """Create lists of similar words from dictionary."""
     sample_idx = random.randrange(2000)
     similar_words = []
     different_words = []
 
-    with open('/usr/share/dict/words') as words:
+    with open('/usr/share/dict/words', 'r') as words:
         for idx, word in enumerate(words):
             word = word.strip()
+            try:
+                word = word.decode('utf-8')
+            except AttributeError:
+                pass
             if idx == sample_idx:
                 different_words.append(word)
             if sample_idx <= idx <= sample_idx + 99:
@@ -72,21 +70,21 @@ def new_trie(request):
     instance = ClassDef()
 
     for item in sequence:
-        instance.insert(item)
+        try:
+            instance.insert(item)
+        except UnicodeDecodeError:
+            import pdb;pdb.set_trace()
 
     to_insert = 'superuniquestring'
 
-    longest = max(sequence, key=len)
+    longest = max(sequence, key=len) if sequence else ''
     contain_false_longer = longest + 'more'
-
     contain_false_shorter = longest
 
-    while contain_false_shorter:
+    while contain_false_shorter and contain_false_shorter in sequence_set:
         contain_false_shorter = contain_false_shorter[:-1]
-        if contain_false_shorter not in sequence_set:
-            break
-    else:
-        contain_false_shorter = 'superuniquestring'
+    if not contain_false_shorter:
+        contain_false_shorter = 'superduperuniquestring'
 
     return TrieFixture(
         instance,

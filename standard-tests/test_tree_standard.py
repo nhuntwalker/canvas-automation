@@ -234,7 +234,7 @@ def test_invariant_after_insert(new_tree):
 
 def test_contains(new_tree):
     """Test that tree contains all items pushed into it."""
-    assert all((new_tree.instance.contains(i) for i in new_tree.sequence))
+    assert all([new_tree.instance.contains(i) for i in new_tree.sequence])
 
 
 def test_contains_false(new_tree):

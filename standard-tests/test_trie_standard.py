@@ -20,6 +20,7 @@ ClassDef = getattr(module, CLASSNAME)
 REQ_METHODS = [
     'insert',
     'contains',
+    'traversal',
 ]
 
 
@@ -27,6 +28,7 @@ TrieFixture = namedtuple(
     'TrieFixture', (
         'instance',
         'sequence',
+        'contains',
         'to_insert',
         'contain_false_shorter',
         'contain_false_longer',
@@ -66,14 +68,11 @@ TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())
 def new_trie(request):
     """Return a new empty instance of MyQueue."""
     sequence = request.param
-    sequence_set = set(sequence)
+    contains = set(sequence)
     instance = ClassDef()
 
     for item in sequence:
-        try:
-            instance.insert(item)
-        except UnicodeDecodeError:
-            import pdb;pdb.set_trace()
+        instance.insert(item)
 
     to_insert = 'superuniquestring'
 
@@ -81,7 +80,7 @@ def new_trie(request):
     contain_false_longer = longest + 'more'
     contain_false_shorter = longest
 
-    while contain_false_shorter and contain_false_shorter in sequence_set:
+    while contain_false_shorter and contain_false_shorter in contains:
         contain_false_shorter = contain_false_shorter[:-1]
     if not contain_false_shorter:
         contain_false_shorter = 'superduperuniquestring'
@@ -89,6 +88,7 @@ def new_trie(request):
     return TrieFixture(
         instance,
         sequence,
+        contains,
         to_insert,
         contain_false_shorter,
         contain_false_longer,
@@ -120,3 +120,18 @@ def test_insert(new_trie):
     """Check that a new item can be inserted and then contains is true."""
     new_trie.instance.insert(new_trie.to_insert)
     assert new_trie.instance.contains(new_trie.to_insert)
+
+
+def test_traversal(new_trie):
+    """Check that traversal returns all items contained in the Trie."""
+    assert set(new_trie.instance.traversal()) == new_trie.contains
+
+
+def test_traversal_false_shorter(new_trie):
+    """Check traversal doesn't return item similar but shorter."""
+    assert new_trie.contain_false_shorter not in new_trie.instance.traversal()
+
+
+def test_traversal_false_longer(new_trie):
+    """Check traversal doesn't return item similar but longer."""
+    assert new_trie.contain_false_shorter not in new_trie.instance.traversal()

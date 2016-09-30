@@ -129,9 +129,9 @@ def test_traversal(new_trie):
 
 def test_traversal_false_shorter(new_trie):
     """Check traversal doesn't return item similar but shorter."""
-    assert new_trie.contain_false_shorter not in new_trie.instance.traversal()
+    assert new_trie.contain_false_shorter not in set(new_trie.instance.traversal())
 
 
 def test_traversal_false_longer(new_trie):
     """Check traversal doesn't return item similar but longer."""
-    assert new_trie.contain_false_shorter not in new_trie.instance.traversal()
+    assert new_trie.contain_false_shorter not in set(new_trie.instance.traversal())

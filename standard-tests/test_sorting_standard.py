@@ -1,17 +1,19 @@
 """Test that sorting algorithms conform to expected sort result."""
 from __future__ import unicode_literals
 import pytest
+import random
 from cases import TEST_CASES
 from importlib import import_module
 
 
 IN_PLACE = True
+STABLE = True
 MODULENAME = 'insertion_sort'
 FUNCNAME = 'insertion_sort'
 
 
-module = import_module(MODULENAME)
-funcdef = getattr(module, FUNCNAME)
+# module = import_module(MODULENAME)
+# funcdef = getattr(module, FUNCNAME)
 
 
 class AnonComparable(object):
@@ -21,9 +23,9 @@ class AnonComparable(object):
         """Initialize with other value."""
         self.value = value
 
-    def __eq__(self, other):
-        """Equality."""
-        return self.value == other.value
+    # def __eq__(self, other):
+    #     """Equality."""
+    #     return self.value == other.value
 
     def __ne__(self, other):
         """Non-equality."""
@@ -46,7 +48,19 @@ class AnonComparable(object):
         return self.value == other.value
 
 
-ANON_CASES = ((AnonComparable(val) for val in seq) for seq in TEST_CASES)
+def _make_anon_list(size):
+    """Return a list size items long of AnonComparable objects with dupes."""
+    seq = []
+    for n in range(size):
+        if n % 2:
+            seq.append(random.randrange(-999, 1000))
+        else:
+            seq.append(random.choice(seq))
+    random.shuffle(seq)
+    return seq
+
+
+ANON_CASES = (_make_anon_list(size) for size in random.sample(range(1000), 10))
 
 
 @pytest.mark.parametrize('sequence', TEST_CASES)
@@ -63,6 +77,8 @@ def test_sort(sequence):
 @pytest.mark.parametrize('sequence', ANON_CASES)
 def test_sort_anon(sequence):
     """Test that submitted sorting algo produces same result as builtin."""
+    if not STABLE:
+        pytest.skip()
     sequence = list(sequence)
     if IN_PLACE:
         funcdef(sequence)

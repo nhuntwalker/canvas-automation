@@ -6,6 +6,7 @@ import random
 from itertools import chain
 from collections import namedtuple
 from importlib import import_module
+from inspect import isgenerator
 
 from cases import STR_EDGE_CASES
 MODULENAME = 'trie'
@@ -120,6 +121,11 @@ def test_insert(new_trie):
     """Check that a new item can be inserted and then contains is true."""
     new_trie.instance.insert(new_trie.to_insert)
     assert new_trie.instance.contains(new_trie.to_insert)
+
+
+def test_traversal_generator(new_tree):
+    """Test that traversal method returns a generator."""
+    assert isgenerator(new_tree.traversal())
 
 
 def test_traversal(new_trie):

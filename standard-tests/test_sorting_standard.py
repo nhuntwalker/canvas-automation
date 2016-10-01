@@ -12,8 +12,8 @@ MODULENAME = 'insertion_sort'
 FUNCNAME = 'insertion_sort'
 
 
-# module = import_module(MODULENAME)
-# funcdef = getattr(module, FUNCNAME)
+module = import_module(MODULENAME)
+funcdef = getattr(module, FUNCNAME)
 
 
 class AnonComparable(object):
@@ -22,10 +22,6 @@ class AnonComparable(object):
     def __init__(self, value):
         """Initialize with other value."""
         self.value = value
-
-    # def __eq__(self, other):
-    #     """Equality."""
-    #     return self.value == other.value
 
     def __ne__(self, other):
         """Non-equality."""
@@ -53,9 +49,9 @@ def _make_anon_list(size):
     seq = []
     for n in range(size):
         if n % 2:
-            seq.append(random.randrange(-999, 1000))
-        else:
             seq.append(random.choice(seq))
+        else:
+            seq.append(random.randrange(-999, 1000))
     random.shuffle(seq)
     return seq
 

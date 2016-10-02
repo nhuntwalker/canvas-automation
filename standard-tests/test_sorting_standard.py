@@ -16,6 +16,7 @@ module = import_module(MODULENAME)
 funcdef = getattr(module, FUNCNAME)
 
 
+# Need to add div and modulo capability
 class AnonComparable(object):
     """Anonymous but unique comparable object."""
 
@@ -43,6 +44,27 @@ class AnonComparable(object):
         """Greater than or equal."""
         return self.value == other.value
 
+    def __div__(self, other):
+        """Division."""
+        try:
+            return self.value / other.value
+        except AttributeError:
+            return self.value / other
+
+    def __floordiv__(self, other):
+        """Floored division."""
+        try:
+            return self.value // other.value
+        except AttributeError:
+            return self.value / other
+
+    def __mod__(self, other):
+        """Modulo."""
+        try:
+            return self.value % other.value
+        except AttributeError:
+            return self.value / other
+
 
 def _make_anon_list(size):
     """Return a list size items long of AnonComparable objects with dupes."""
@@ -51,7 +73,7 @@ def _make_anon_list(size):
         if n % 2:
             seq.append(random.choice(seq))
         else:
-            seq.append(random.randrange(-999, 1000))
+            seq.append(AnonComparable(random.randrange(1000)))
     random.shuffle(seq)
     return seq
 

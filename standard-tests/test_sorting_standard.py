@@ -42,7 +42,7 @@ class AnonComparable(object):
 
     def __ge__(self, other):
         """Greater than or equal."""
-        return self.value == other.value
+        return self.value >= other.value
 
     def __div__(self, other):
         """Division."""
@@ -78,7 +78,7 @@ def _make_anon_list(size):
     return seq
 
 
-ANON_CASES = (_make_anon_list(size) for size in random.sample(range(1000), 10))
+ANON_CASES = (_make_anon_list(size) for size in random.sample(range(1000), 100))
 
 
 @pytest.mark.parametrize('sequence', TEST_CASES)

@@ -33,6 +33,8 @@ TrieFixture = namedtuple(
         'to_insert',
         'contain_false_shorter',
         'contain_false_longer',
+        'start',
+        'traverse',
     )
 )
 
@@ -62,13 +64,22 @@ def _make_words():
         yield different_words
 
 
+def _start_stubs(sequence):
+    """Generate many start points for each item in a sequence."""
+    for word in sequence:
+        for n in range(1, len(word)):
+            yield word[:n]
+
+
 TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())
+TEST_CASES = ((sequence, start) for sequence in TEST_CASES
+              for start in _start_stubs(sequence))
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_trie(request):
     """Return a new empty instance of MyQueue."""
-    sequence = request.param
+    sequence, start = request.param
     contains = set(sequence)
     instance = ClassDef()
 
@@ -86,6 +97,8 @@ def new_trie(request):
     if not contain_false_shorter:
         contain_false_shorter = 'superduperuniquestring'
 
+    traverse = set(word for word in sequence if word.startswith(start))
+
     return TrieFixture(
         instance,
         sequence,
@@ -93,6 +106,8 @@ def new_trie(request):
         to_insert,
         contain_false_shorter,
         contain_false_longer,
+        start,
+        traverse,
     )
 
 
@@ -130,14 +145,17 @@ def test_traversal_generator(new_tree):
 
 def test_traversal(new_trie):
     """Check that traversal returns all items contained in the Trie."""
-    assert set(new_trie.instance.traversal()) == new_trie.contains
+    result = new_trie.instance.traversal(new_trie.start)
+    assert set(result) == new_trie.traverse
 
 
 def test_traversal_false_shorter(new_trie):
     """Check traversal doesn't return item similar but shorter."""
-    assert new_trie.contain_false_shorter not in set(new_trie.instance.traversal())
+    result = new_trie.instance.traversal(new_trie.start)
+    assert new_trie.contain_false_shorter not in set(result)
 
 
 def test_traversal_false_longer(new_trie):
     """Check traversal doesn't return item similar but longer."""
-    assert new_trie.contain_false_shorter not in set(new_trie.instance.traversal())
+    result = new_trie.instance.traversal(new_trie.start)
+    assert new_trie.contain_false_longer not in set(result)

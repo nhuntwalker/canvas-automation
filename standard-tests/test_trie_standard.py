@@ -41,7 +41,10 @@ TrieFixture = namedtuple(
 
 def _make_words():
     """Create lists of similar words from dictionary."""
-    sample_idx = random.randrange(2000)
+    sample_size = 29
+    words_between_samples = 2000
+
+    sample_idx = random.randrange(words_between_samples)
     similar_words = []
     different_words = []
 
@@ -54,11 +57,11 @@ def _make_words():
                 pass
             if idx == sample_idx:
                 different_words.append(word)
-            if sample_idx <= idx <= sample_idx + 99:
+            if sample_idx <= idx <= sample_idx + sample_size:
                 similar_words.append(word)
-            elif idx > sample_idx + 99:
+            elif idx > sample_idx + sample_size:
                 yield similar_words
-                sample_idx = idx + random.randrange(2000)
+                sample_idx = idx + random.randrange(words_between_samples)
                 similar_words = []
         yield similar_words
         yield different_words
@@ -67,11 +70,16 @@ def _make_words():
 def _start_stubs(sequence):
     """Generate many start points for each item in a sequence."""
     for word in sequence:
-        for n in range(1, min(3, len(word))):
-            yield word[:n]
+        num_starts = min(3, len(word))
+        start_range = range(min(1, len(word)), len(word) + 1)
+        for size in random.sample(start_range, num_starts):
+            yield word[:size]
 
 
-TEST_CASES = chain((''.join(case) for case in STR_EDGE_CASES), _make_words())
+TEST_CASES = chain(
+    (''.join(case) for case in STR_EDGE_CASES if END_CHAR not in case),
+    _make_words(),
+)
 TEST_CASES = ((sequence, start) for sequence in TEST_CASES
               for start in _start_stubs(sequence))
 

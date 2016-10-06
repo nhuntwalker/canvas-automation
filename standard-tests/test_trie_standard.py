@@ -67,7 +67,7 @@ def _make_words():
 def _start_stubs(sequence):
     """Generate many start points for each item in a sequence."""
     for word in sequence:
-        for n in range(1, len(word)):
+        for n in range(1, min(3, len(word))):
             yield word[:n]
 
 

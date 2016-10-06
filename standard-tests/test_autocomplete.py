@@ -6,11 +6,11 @@ import random
 from itertools import chain
 from collections import namedtuple
 from importlib import import_module
-from inspect import isgenerator
 
 from cases import STR_EDGE_CASES
 MODULENAME = 'autocomplete'
 CLASSNAME = 'Autocompleter'
+END_CHAR = '$'
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -75,11 +75,13 @@ TEST_CASES = ((sequence, start) for sequence in TEST_CASES
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
-def new_autocomplete(request):
+def new_ac(request):
     """Return a new empty instance of MyQueue."""
     sequence, start = request.param
+    max_completions = random.randrange(10)
+
     contains = set(sequence)
-    instance = ClassDef(sequence)
+    instance = ClassDef(sequence, max_completions)
 
     longest = max(sequence, key=len) if sequence else ''
     contain_false_longer = longest + 'more'
@@ -100,5 +102,17 @@ def new_autocomplete(request):
         contain_false_longer,
         start,
         traverse,
+        max_completions,
     )
 
+
+def test_num_completions(new_ac):
+    """Check that the correct number of autocompletions are returned."""
+    results = new_ac.instance(new_ac.start)
+    assert len(results) <= new_ac.max_completions
+
+
+def test_correct_results(new_ac):
+    """Check that the results are a subset of the expected results."""
+    results = new_ac.instance(new_ac.start)
+    assert set(results).issubset(new_ac.contains)

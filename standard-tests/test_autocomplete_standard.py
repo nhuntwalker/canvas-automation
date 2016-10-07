@@ -25,6 +25,7 @@ AutocompleteFixture = namedtuple(
         'contain_false_longer',
         'start',
         'traverse',
+        'max_completions',
     )
 )
 
@@ -106,6 +107,12 @@ def new_ac(request):
     )
 
 
+def test_max_completions_default():
+    """Check that max_completions is set to 5 by default."""
+    instance = ClassDef([])
+    assert instance.max_completions == 5
+
+
 def test_num_completions(new_ac):
     """Check that the correct number of autocompletions are returned."""
     results = new_ac.instance(new_ac.start)
@@ -116,3 +123,15 @@ def test_correct_results(new_ac):
     """Check that the results are a subset of the expected results."""
     results = new_ac.instance(new_ac.start)
     assert set(results).issubset(new_ac.contains)
+
+
+def test_contains_false_shorter(new_ac):
+    """Check that an item similar to one in Trie but shorter returns False."""
+    results = new_ac.instance(new_ac.start)
+    assert new_ac.contain_false_shorter not in results
+
+
+def test_contains_false_longer(new_ac):
+    """Check that an item similar to one in Trie but longer returns False."""
+    results = new_ac.instance(new_ac.start)
+    assert new_ac.contain_false_longer not in results

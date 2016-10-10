@@ -1,6 +1,9 @@
 """Standardized tests for Binary Search Tree data structure."""
 from __future__ import unicode_literals
 
+# proper test for each traversal
+# invariant balance traverse
+
 import math
 import pytest
 import random

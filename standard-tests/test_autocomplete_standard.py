@@ -6,35 +6,26 @@ import random
 from itertools import chain
 from collections import namedtuple
 from importlib import import_module
-from inspect import isgenerator
 
 from cases import STR_EDGE_CASES
-MODULENAME = 'trie'
-CLASSNAME = 'Trie'
-ROOT_ATTR = 'root'
+MODULENAME = 'autocomplete'
+CLASSNAME = 'Autocompleter'
 END_CHAR = '$'
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
 
 
-REQ_METHODS = [
-    'insert',
-    'contains',
-    'traversal',
-]
-
-
-TrieFixture = namedtuple(
-    'TrieFixture', (
+AutocompleteFixture = namedtuple(
+    'AutocompleteFixture', (
         'instance',
         'sequence',
         'contains',
-        'to_insert',
         'contain_false_shorter',
         'contain_false_longer',
         'start',
         'traverse',
+        'max_completions',
     )
 )
 
@@ -85,16 +76,13 @@ TEST_CASES = ((sequence, start) for sequence in TEST_CASES
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
-def new_trie(request):
+def new_ac(request):
     """Return a new empty instance of MyQueue."""
     sequence, start = request.param
+    max_completions = random.randrange(10)
+
     contains = set(sequence)
-    instance = ClassDef()
-
-    for item in sequence:
-        instance.insert(item)
-
-    to_insert = 'superuniquestring'
+    instance = ClassDef(sequence, max_completions)
 
     longest = max(sequence, key=len) if sequence else ''
     contain_false_longer = longest + 'more'
@@ -107,63 +95,43 @@ def new_trie(request):
 
     traverse = set(word for word in sequence if word.startswith(start))
 
-    return TrieFixture(
+    return AutocompleteFixture(
         instance,
         sequence,
         contains,
-        to_insert,
         contain_false_shorter,
         contain_false_longer,
         start,
         traverse,
+        max_completions,
     )
 
 
-@pytest.mark.parametrize('method_name', REQ_METHODS)
-def test_has_method(method_name):
-    """Test that graph has all the correct methods."""
-    assert hasattr(ClassDef(), method_name)
+def test_max_completions_default():
+    """Check that max_completions is set to 5 by default."""
+    instance = ClassDef([])
+    assert instance.max_completions == 5
 
 
-def test_contains_all(new_trie):
-    """Check that every item in the sequence is contained within the Trie."""
-    assert all((new_trie.instance.contains(val) for val in new_trie.sequence))
+def test_num_completions(new_ac):
+    """Check that the correct number of autocompletions are returned."""
+    results = new_ac.instance(new_ac.start)
+    assert len(results) <= new_ac.max_completions
 
 
-def test_contains_false_shorter(new_trie):
+def test_correct_results(new_ac):
+    """Check that the results are a subset of the expected results."""
+    results = new_ac.instance(new_ac.start)
+    assert set(results).issubset(new_ac.contains)
+
+
+def test_contains_false_shorter(new_ac):
     """Check that an item similar to one in Trie but shorter returns False."""
-    assert not new_trie.instance.contains(new_trie.contain_false_shorter)
+    results = new_ac.instance(new_ac.start)
+    assert new_ac.contain_false_shorter not in results
 
 
-def test_contains_false_longer(new_trie):
+def test_contains_false_longer(new_ac):
     """Check that an item similar to one in Trie but longer returns False."""
-    assert not new_trie.instance.contains(new_trie.contain_false_longer)
-
-
-def test_insert(new_trie):
-    """Check that a new item can be inserted and then contains is true."""
-    new_trie.instance.insert(new_trie.to_insert)
-    assert new_trie.instance.contains(new_trie.to_insert)
-
-
-def test_traversal_generator(new_trie):
-    """Test that traversal method returns a generator."""
-    assert isgenerator(new_trie.instance.traversal())
-
-
-def test_traversal(new_trie):
-    """Check that traversal returns all items contained in the Trie."""
-    result = new_trie.instance.traversal(new_trie.start)
-    assert set(result) == new_trie.traverse
-
-
-def test_traversal_false_shorter(new_trie):
-    """Check traversal doesn't return item similar but shorter."""
-    result = new_trie.instance.traversal(new_trie.start)
-    assert new_trie.contain_false_shorter not in set(result)
-
-
-def test_traversal_false_longer(new_trie):
-    """Check traversal doesn't return item similar but longer."""
-    result = new_trie.instance.traversal(new_trie.start)
-    assert new_trie.contain_false_longer not in set(result)
+    results = new_ac.instance(new_ac.start)
+    assert new_ac.contain_false_longer not in results

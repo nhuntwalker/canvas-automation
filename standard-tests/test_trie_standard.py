@@ -148,7 +148,7 @@ def test_insert(new_trie):
 
 def test_traversal_generator(new_trie):
     """Test that traversal method returns a generator."""
-    assert isgenerator(new_trie.traversal())
+    assert isgenerator(new_trie.instance.traversal())
 
 
 def test_traversal(new_trie):

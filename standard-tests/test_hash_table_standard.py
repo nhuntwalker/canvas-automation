@@ -2,21 +2,21 @@
 from __future__ import unicode_literals
 
 import pytest
+import random
 from itertools import chain, product
 from collections import namedtuple
 from importlib import import_module
 
 from cases import (
-    INT_EDGE_CASES,
     STR_EDGE_CASES,
-    INT_TEST_CASES,
     STR_TEST_CASES,
     _make_words,
 )
 
 MODULENAME = 'hash_table'
 CLASSNAME = 'HashTable'
-BUCKETS_ATTR = 'buckets'
+BUCKETS_ATTR = 'bucket'
+GET_ERROR = True
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -34,12 +34,15 @@ HashTableFixture = namedtuple(
         'words',
         'contains',
         'to_insert',
+        'size',
     )
 )
 
+SIZES = list(random.sample(range(1000), 20))
+SIZES.extend([1, 9999])
 TEST_CASES = product(
-    INT_EDGE_CASES + INT_TEST_CASES,
-    chain(STR_EDGE_CASES + STR_TEST_CASES, _make_words(10, 3000)),
+    chain(SIZES),
+    chain(STR_EDGE_CASES, STR_TEST_CASES, _make_words(10, 3000)),
 )
 
 BAD_TYPES = [None, 1.0, 8, True, [], (1,), {}, set()]
@@ -49,11 +52,11 @@ BAD_TYPES = [None, 1.0, 8, True, [], (1,), {}, set()]
 def new_hash_table(request):
     """Return a new empty instance of MyQueue."""
     size, words = request.param
-    contains = set(words)
     instance = ClassDef(size)
+    contains = {word: word + 'val' for word in words}
 
-    for item in words:
-        instance.set(item, item + 'value')
+    for key, val in contains.items():
+        instance.set(key, val)
 
     to_insert = 'superuniquestring'
 
@@ -62,13 +65,14 @@ def new_hash_table(request):
         words,
         contains,
         to_insert,
+        size,
     )
 
 
 @pytest.mark.parametrize('method_name', REQ_METHODS)
 def test_has_method(method_name):
     """Test that graph has all the correct methods."""
-    assert hasattr(ClassDef(), method_name)
+    assert hasattr(ClassDef(8), method_name)
 
 
 def test_hash_int(new_hash_table):
@@ -77,17 +81,26 @@ def test_hash_int(new_hash_table):
     assert isinstance(new_hash_table.instance._hash(val), int)
 
 
-def test_table_size(new_hash_table, value):
+def test_table_size(new_hash_table):
     """Test size of hash table."""
+    val = new_hash_table.to_insert
     buckets = getattr(new_hash_table.instance, BUCKETS_ATTR)
-    assert -1 < new_hash_table.instance._hash(value) < len(buckets)
+    hashed = new_hash_table.instance._hash(val)
+    assert -1 < hashed % new_hash_table.size < len(buckets)
 
 
-@pytest.mark.parametrize("value", BAD_TYPES)
-def test_hash_type_error(new_hash_table, value):
+@pytest.mark.parametrize("key", BAD_TYPES)
+def test_hash_type_error(key):
     """Test that any input but string raises type error."""
     with pytest.raises(TypeError):
-        new_hash_table.instance._hash(value)
+        ClassDef().set(key, key)
+
+
+def test_get(new_hash_table):
+    """Test that all previously set keys are present."""
+    expected = set(new_hash_table.contains.values())
+    results = set(new_hash_table.instance.get(key) for key in new_hash_table.contains)
+    assert expected == results
 
 
 def test_set_get(new_hash_table):
@@ -100,4 +113,8 @@ def test_set_get(new_hash_table):
 
 def test_get_fail(new_hash_table):
     """Test table return none when key not present."""
-    assert new_hash_table.instance.get(new_hash_table.to_insert) is None
+    if GET_ERROR:
+        with pytest.raises(KeyError):
+            new_hash_table.instance.get(new_hash_table.to_insert)
+    else:
+        assert new_hash_table.instance.get(new_hash_table.to_insert) is None

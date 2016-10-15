@@ -61,3 +61,28 @@ TEST_CASES = chain(
 )
 
 POP = (True, False)
+
+
+def _make_words(sample_size=29, words_between_samples=2000):
+    """Create lists of similar words from dictionary."""
+    sample_idx = random.randrange(words_between_samples)
+    similar_words = []
+    different_words = []
+
+    with open('/usr/share/dict/words', 'r') as words:
+        for idx, word in enumerate(words):
+            word = word.strip()
+            try:
+                word = word.decode('utf-8')
+            except AttributeError:
+                pass
+            if idx == sample_idx:
+                different_words.append(word)
+            if sample_idx <= idx <= sample_idx + sample_size:
+                similar_words.append(word)
+            elif idx > sample_idx + sample_size:
+                yield similar_words
+                sample_idx = idx + random.randrange(words_between_samples)
+                similar_words = []
+        yield similar_words
+        yield different_words

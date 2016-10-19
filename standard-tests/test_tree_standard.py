@@ -308,9 +308,9 @@ def test_no_duplicates(new_tree):
 
 
 @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-def test_traversal_generator(method_name, new_tree):
+def test_traversal_generator(method_name):
     """Test that all traversal methods always return generators."""
-    method = getattr(new_tree.instance, method_name)
+    method = getattr(ClassDef(), method_name)
     assert isgenerator(method())
 
 

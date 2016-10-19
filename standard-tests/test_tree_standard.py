@@ -64,14 +64,14 @@ BinaryTreeFixture = namedtuple(
 )
 
 
-def _tree_checker(tree):
+def _tree_checker(node):
     """"Help function to check binary tree correctness."""
-    if tree is None:
+    if node is None:
         return True
 
-    this_val = getattr(tree, VAL_ATTR)
-    left = getattr(tree, LEFT_ATTR)
-    right = getattr(tree, RIGHT_ATTR)
+    this_val = getattr(node, VAL_ATTR)
+    left = getattr(node, LEFT_ATTR)
+    right = getattr(node, RIGHT_ATTR)
 
     if right is not None and getattr(right, VAL_ATTR) < this_val:
         return False
@@ -106,34 +106,39 @@ def _unbalanced_balance(sequence):
     return _unbalanced_depth(left) - _unbalanced_depth(right)
 
 
-def _in_order(sequence):
-    """Get the expected in-order traversal from a random sequence."""
-    if len(sequence) < 2:
-        return list(sequence)
-    current, less, more = _current_less_more(sequence)
-    return _in_order(less) + [current] + _in_order(more)
+def _in_order(node):
+    """Get expected in-order traversal from a node in a Binary Search Tree."""
+    if node is None:
+        return []
+    val = getattr(node, VAL_ATTR)
+    left = getattr(node, LEFT_ATTR)
+    right = getattr(node, RIGHT_ATTR)
+    return _in_order(left) + [val] + _in_order(right)
 
 
-def _pre_order(sequence):
+def _pre_order(node):
     """Get the expected pre-order traversal from a random sequence."""
-    if len(sequence) < 2:
-        return list(sequence)
-    current, less, more = _current_less_more(sequence)
-    return [current] + _pre_order(less) + _pre_order(more)
+    if node is None:
+        return []
+    val = getattr(node, VAL_ATTR)
+    left = getattr(node, LEFT_ATTR)
+    right = getattr(node, RIGHT_ATTR)
+    return [val] + _pre_order(left) + _pre_order(right)
 
 
-def _post_order(sequence):
+def _post_order(node):
     """Get the expected post-order traversal from a random sequence."""
-    if len(sequence) < 2:
-        return list(sequence)
-    current, less, more = _current_less_more(sequence)
-    return _post_order(less) + _post_order(more) + [current]
+    if node is None:
+        return []
+    val = getattr(node, VAL_ATTR)
+    left = getattr(node, LEFT_ATTR)
+    right = getattr(node, RIGHT_ATTR)
+    return _post_order(left) + _post_order(right) + [val]
 
 
-def _breadth_first(tree):
+def _breadth_first(root):
     """Get the expected breadth-first traversal for a given tree."""
     output = []
-    root = getattr(tree, ROOT_ATTR)
     if root is None:
         return output
     queue = deque([root])
@@ -303,24 +308,19 @@ def test_no_duplicates(new_tree):
 
 
 @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-def test_traversal_generator(method_name, new_tree):
+def test_traversal_generator(method_name):
     """Test that all traversal methods always return generators."""
-    method = getattr(new_tree.instance, method_name)
+    method = getattr(ClassDef(), method_name)
     assert isgenerator(method())
 
 
-@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS[:-1])
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
 def test_traversals(method_name, new_tree):
     """Test that in-order traversal generates values in sorted order."""
-    method = getattr(new_tree.instance, method_name)
     canon = globals()['_' + method_name]
-    assert list(method()) == canon(new_tree.sequence)
-
-
-def test_breadth_first(new_tree):
-    """Test that breadth first traversal happens as expected."""
-    expected = _breadth_first(new_tree.instance)
-    assert list(new_tree.instance.breadth_first()) == expected
+    method = getattr(new_tree.instance, method_name)
+    root = getattr(new_tree.instance, ROOT_ATTR)
+    assert list(method()) == canon(root)
 
 
 # Deletion tests

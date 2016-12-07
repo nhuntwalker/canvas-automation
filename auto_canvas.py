@@ -21,7 +21,7 @@ DEFAULT_ROOT_NAME = 'grading'
 
 TOKEN = os.environ['API_TOKEN']
 COURSE_ID = os.environ['COURSE_ID']
-API_ROOT = 'https://canvas.instructure.com/api/v1/'
+API_ROOT = 'https://canvas.instructure.com/api/v1'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')

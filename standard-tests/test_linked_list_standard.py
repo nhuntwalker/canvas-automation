@@ -5,14 +5,18 @@ from importlib import import_module
 from itertools import product
 from collections import namedtuple
 import random
-from cases import TEST_CASES
+from cases import TEST_CASES, make_unique_value
 
-BALANCED = True
+# These constants are to be modified depending on the particular names and
+# choices made by the students.
 MODULENAME = 'linked_list'
 CLASSNAME = 'LinkedList'
 NODE_CLASSNAME = 'Node'
 NODE_VAL_ATTR = 'val'
 HEAD_ATTR = 'head'
+SEARCH_ERROR = ValueError
+REMOVE_ERROR = None
+
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -75,11 +79,12 @@ def new_ll(request):
         last = None
         pop_error = IndexError
         search_val = None
-        search_error = ValueError
+        search_error = SEARCH_ERROR
         remove_node = None
 
     size = len(sequence)
     display_result = str(tuple(reversed(sequence)))
+
     return LinkedListFixture(
         instance,
         first,
@@ -102,8 +107,7 @@ def test_has_method(method):
 
 def test_push(new_ll):
     """Test that unique pushed item is popped befire all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEFLAGVALUE').hexdigest()
+    val = make_unique_value()
     new_ll.instance.push(val)
     assert new_ll.instance.pop() == val
 
@@ -150,9 +154,30 @@ def test_search_node_val(new_ll):
     node = new_ll.instance.search(new_ll.search_val)
     assert getattr(node, NODE_VAL_ATTR) == new_ll.search_val
 
-# Search not in list
-# remove not in list error
-# Remove not in list after remove
+
+def test_search_not_present(new_ll):
+    """Test what happens when searching for something not in the list."""
+    val = make_unique_value()
+    if SEARCH_ERROR is None:
+        assert new_ll.instance.search(val) is None
+    else:
+        with pytest.raises(SEARCH_ERROR):
+            new_ll.instance.search(val)
+
+
+def test_remove(new_ll):
+    """Test that remove method of node removes it from the data structure."""
+    new_ll.instance.remove(new_ll.remove_node)
+    contents = set(new_ll.instance.pop() for _ in range(new_ll.size - 1))
+    assert getattr(new_ll.remove_node, NODE_VAL_ATTR) not in contents
+
+
+def test_remove_fake_node(new_ll):
+    """Test that attempt to remove a node not in list raises an error."""
+    val = make_unique_value()
+    fake_node = Node(val)
+    with pytest.raises(REMOVE_ERROR):
+        new_ll.instance.remove(fake_node)
 
 
 def test_display(new_ll):

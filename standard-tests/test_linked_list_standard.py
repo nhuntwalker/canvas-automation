@@ -47,7 +47,7 @@ def new_ll(request):
     if pop and sequence:
         for _ in range(min(len(sequence), pop)):
             instance.pop()
-            sequence = sequence[1:]
+            sequence = sequence[:-1]
 
     if sequence:
         first = sequence[0]
@@ -78,10 +78,10 @@ def test_push(new_ll):
 
 
 def test_pop(new_ll):
-    """Test that first value puted into linked list is returned by pop."""
+    """Test that last value puted into linked list is returned by pop."""
     if new_ll.pop_error is not None:
         pytest.skip()
-    assert new_ll.instance.pop() == new_ll.first
+    assert new_ll.instance.pop() == new_ll.last
 
 
 def test_pop_error(new_ll):

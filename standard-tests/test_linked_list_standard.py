@@ -19,7 +19,6 @@ ClassDef = getattr(module, CLASSNAME)
 REQ_METHODS = [
     'push',
     'pop',
-    'peek',
     'size',
     'search',
     'remove',

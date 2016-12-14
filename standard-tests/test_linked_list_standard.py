@@ -40,7 +40,6 @@ LinkedListFixture = namedtuple(
         'pop_error',
         'size',
         'search_val',
-        'search_error',
         'remove_node',
         'display_result',
     )
@@ -90,7 +89,6 @@ def new_ll(request):
         pop_error,
         size,
         search_val,
-        search_error,
         remove_node,
         display_result,
     )

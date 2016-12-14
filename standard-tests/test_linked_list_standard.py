@@ -149,3 +149,12 @@ def test_search_node_val(new_ll):
         pytest.skip()
     node = new_ll.instance.search(new_ll.search_val)
     assert getattr(node, NODE_VAL_ATTR) == new_ll.search_val
+
+# Search not in list
+# remove not in list error
+# Remove not in list after remove
+
+
+def test_display(new_ll):
+    """Test that string-of-tuple is displayed correctly."""
+    assert new_ll.instance.display() == new_ll.display_result

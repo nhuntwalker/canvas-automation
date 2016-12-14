@@ -14,7 +14,6 @@ CLASSNAME = 'LinkedList'
 NODE_CLASSNAME = 'Node'
 NODE_VAL_ATTR = 'val'
 HEAD_ATTR = 'head'
-SEARCH_ERROR = ValueError
 REMOVE_ERROR = None
 
 
@@ -71,7 +70,6 @@ def new_ll(request):
         last = sequence[-1]
         pop_error = None
         search_val = random.choice(sequence)
-        search_error = None
         remove_node = instance.search(random.choice(sequence))
 
     else:
@@ -79,7 +77,6 @@ def new_ll(request):
         last = None
         pop_error = IndexError
         search_val = None
-        search_error = SEARCH_ERROR
         remove_node = None
 
     size = len(sequence)
@@ -158,11 +155,7 @@ def test_search_node_val(new_ll):
 def test_search_not_present(new_ll):
     """Test what happens when searching for something not in the list."""
     val = make_unique_value()
-    if SEARCH_ERROR is None:
-        assert new_ll.instance.search(val) is None
-    else:
-        with pytest.raises(SEARCH_ERROR):
-            new_ll.instance.search(val)
+    assert new_ll.instance.search(val) is None
 
 
 def test_remove(new_ll):

@@ -4,16 +4,19 @@ import pytest
 from importlib import import_module
 from itertools import product
 from collections import namedtuple
-
+import random
 from cases import TEST_CASES
 
 BALANCED = True
 MODULENAME = 'linked_list'
 CLASSNAME = 'LinkedList'
+NODE_CLASSNAME = 'Node'
+NODE_VAL_ATTR = 'val'
 HEAD_ATTR = 'head'
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
+Node = getattr(module, NODE_CLASSNAME)
 
 
 REQ_METHODS = [
@@ -26,8 +29,18 @@ REQ_METHODS = [
 ]
 
 LinkedListFixture = namedtuple(
-    'LinkedListFixture',
-    ('instance', 'first', 'last', 'sequence', 'pop_error', 'size')
+    'LinkedListFixture', (
+        'instance',
+        'first',
+        'last',
+        'sequence',
+        'pop_error',
+        'size',
+        'search_val',
+        'search_error',
+        'remove_node',
+        'display_result',
+    )
 )
 
 
@@ -53,14 +66,32 @@ def new_ll(request):
         first = sequence[0]
         last = sequence[-1]
         pop_error = None
+        search_val = random.choice(sequence)
+        search_error = None
+        remove_node = instance.search(random.choice(sequence))
 
     else:
         first = None
         last = None
         pop_error = IndexError
+        search_val = None
+        search_error = ValueError
+        remove_node = None
 
     size = len(sequence)
-    return LinkedListFixture(instance, first, last, sequence, pop_error, size)
+    display_result = str(tuple(reversed(sequence)))
+    return LinkedListFixture(
+        instance,
+        first,
+        last,
+        sequence,
+        pop_error,
+        size,
+        search_val,
+        search_error,
+        remove_node,
+        display_result,
+    )
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
@@ -100,5 +131,21 @@ def test_pop_sequence(new_ll):
 
 
 def test_size(new_ll):
-    """Test that Queue.size() returns the expected item count."""
+    """Test that LinkedList.size() returns the expected item count."""
     assert new_ll.instance.size() == new_ll.size
+
+
+def test_search_node_type(new_ll):
+    """Test that search returns an instance of the Node class."""
+    if new_ll.search_val is None:
+        pytest.skip()
+    node = new_ll.instance.search(new_ll.search_val)
+    assert isinstance(node, Node)
+
+
+def test_search_node_val(new_ll):
+    """Test that the node returned by search has the correct val attribute."""
+    if new_ll.search_val is None:
+        pytest.skip()
+    node = new_ll.instance.search(new_ll.search_val)
+    assert getattr(node, NODE_VAL_ATTR) == new_ll.search_val

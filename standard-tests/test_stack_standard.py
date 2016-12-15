@@ -49,7 +49,7 @@ TEST_CASES = product(TEST_CASES, POP)
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_stack(request):
-    """Return a new empty instance of MyQueue."""
+    """Return a namedtuple containing test information."""
     from stack import Stack
     sequence, pop = request.param
 

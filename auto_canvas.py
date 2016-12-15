@@ -11,7 +11,6 @@ from __future__ import unicode_literals
 import os
 import re
 import sys
-import argparse
 import requests
 from subprocess import call
 from string import punctuation
@@ -19,8 +18,12 @@ from string import punctuation
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_ROOT_NAME = 'grading'
 
-TOKEN = os.environ['API_TOKEN']
-COURSE_ID = os.environ['COURSE_ID']
+try:
+    TOKEN = os.environ['API_TOKEN']
+    COURSE_ID = os.environ['COURSE_ID']
+except KeyError:
+    raise KeyError('Please activate your secret file containing tokens.')
+
 API_ROOT = 'https://canvas.instructure.com/api/v1'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
@@ -87,7 +90,9 @@ def get_course_submissions(course_id):
 
 def get_assignment_submissions(asgn):
     """Return list of submission dicts for the specified assignment."""
-    url = asgn.get('url', asgn.get('submissions_download_url', '').split('?')[0])
+    url = asgn.get(
+        'url',
+        asgn.get('submissions_download_url', '').split('?')[0])
     for submission in joined_api_request(url, 'submissions', include='user'):
         yield submission
 
@@ -168,7 +173,10 @@ def get_git_repo(submission, student, path):
     print('cloning from {}'.format(repo_url))
     call(['git', 'clone', repo_url, path], cwd=path)
     print('fetching from refspec: {}'.format(refspec))
-    call(['git', 'fetch', 'origin', ':'.join((refspec, local_branchname))], cwd=path)
+    call(
+        ['git', 'fetch', 'origin', ':'.join((refspec, local_branchname))],
+        cwd=path
+    )
     call(['git', 'checkout', local_branchname], cwd=path)
     print('pulling from refspec: {}'.format(refspec))
     call(['git', 'pull', 'origin', refspec], cwd=path)

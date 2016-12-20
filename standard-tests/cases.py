@@ -3,6 +3,18 @@ from __future__ import unicode_literals
 import random
 import string
 from itertools import chain
+from hashlib import md5
+
+
+# Trimming off whitespace/line return chars
+# reserving '0' for less-than string comparisons
+# reserving '~' for greater-than string comparisons
+STR_CHARS = sorted(string.printable[:-6])
+STR_CHARS = STR_CHARS[1:-1]
+MIN_STR = STR_CHARS[0]
+MAX_STR = STR_CHARS[-1]
+MAX_INT = 99999999999999999999999999
+MIN_INT = -MAX_INT
 
 
 def _random_with_dupes(sequence):
@@ -13,15 +25,6 @@ def _random_with_dupes(sequence):
     random.shuffle(result)
     return result
 
-
-# reserving '0' for less-than string comparisons
-# reserving '~' for greater-than string comparisons
-STR_CHARS = sorted(string.printable)
-STR_CHARS = STR_CHARS[1:-1]
-MIN_STR = STR_CHARS[0]
-MAX_STR = STR_CHARS[-1]
-MAX_INT = 99999999999999999999999999
-MIN_INT = -MAX_INT
 
 INT_EDGE_CASES = [
     (),
@@ -64,7 +67,10 @@ POP = (True, False)
 
 
 def _make_words(sample_size=29, words_between_samples=2000):
-    """Create lists of similar words from dictionary."""
+    """Create lists of similar words from dictionary.
+
+    Used for testing Trie.
+    """
     sample_idx = random.randrange(words_between_samples)
     similar_words = []
     different_words = []
@@ -86,3 +92,8 @@ def _make_words(sample_size=29, words_between_samples=2000):
                 similar_words = []
         yield similar_words
         yield different_words
+
+
+def make_unique_value():
+    """Create a unique value for testing non-membership in a data strucutre."""
+    return md5(b'SUPERUNIQUEFLAGVALUE').hexdigest()

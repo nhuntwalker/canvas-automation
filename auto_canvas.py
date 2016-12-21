@@ -179,7 +179,7 @@ def get_git_repo(submission, student, path):
     )
     call(['git', 'checkout', local_branchname], cwd=path)
     print('pulling from refspec: {}'.format(refspec))
-    call(['git', 'pull', 'origin', refspec], cwd=path)
+    call(['git', 'pull', '--no-edit', 'origin', refspec], cwd=path)
 
 
 if __name__ == '__main__':

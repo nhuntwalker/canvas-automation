@@ -1,9 +1,25 @@
 """Standardized tests for the Heap data structure."""
 
-import random
 import pytest
 from itertools import product, chain
 from collections import namedtuple
+from importlib import import_module
+from cases import (
+    INT_EDGE_CASES,
+    INT_TEST_CASES,
+    MAX_INT,
+    MIN_INT,
+    make_unique_value,
+)
+
+
+MODULENAME = 'heap'
+CLASSNAME = 'Heap'
+# Min heap or max heap. defaults to minheap i.e. MAX == True
+MAX = False
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
 
 REQ_METHODS = [
     'push',
@@ -15,45 +31,25 @@ HeapFixture = namedtuple(
     ('instance', 'pop_value', 'sorted_sequence', 'pop_error')
 )
 
-EDGE_CASES = [
-    (),
-    (0,),
-    (0, 1),
-    (1, 0),
-    range(3),
-    range(2, -1, -1),
-    range(100),
-    range(99, -1, -1),
-]
-
-# lists of ints
-INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 40)) for n in range(10))
-
-TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES)
+TEST_CASES = chain(INT_EDGE_CASES, INT_TEST_CASES)
 
 INIT = (True, False)
 POP = list(range(3))
 
 TEST_CASES = product(TEST_CASES, INIT, POP)
 
-# Min heap or max heap. defaults to minheap i.e. MAX == True
-MAX = False
-LIMIT = 999999999999999999999999999
-
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_heap(request):
     """Return a new empty instance of MyQueue."""
-    from binary_heap import BinaryHeap
     sequence, init, pop = request.param
     # So that cases which are generators can be used more than once
     sequence = list(sequence)
 
     if init:
-        instance = BinaryHeap(sequence)
+        instance = ClassDef(sequence)
     else:
-        instance = BinaryHeap()
+        instance = ClassDef()
         for val in sequence:
             instance.push(val)
 
@@ -77,21 +73,19 @@ def new_heap(request):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that heap has all the correct methods."""
-    from binary_heap import BinaryHeap
-    assert hasattr(BinaryHeap(), method)
+    assert hasattr(ClassDef(), method)
 
 
 @pytest.mark.parametrize('val', [1, False, True, None, Exception])
 def test_init_error(val):
     """Test that heap throws value error when initialized with non iterable."""
-    from binary_heap import BinaryHeap
     with pytest.raises(TypeError):
-        BinaryHeap(val)
+        ClassDef(val)
 
 
 def test_push_pop(new_heap):
     """Test that unique pushed item is popped before all other items."""
-    val = LIMIT if MAX else -LIMIT
+    val = MAX_INT if MAX else MIN_INT
     new_heap.instance.push(val)
     assert new_heap.instance.pop() == val
 

@@ -1,10 +1,26 @@
 """Standardized tests for Doubly-Linked List data structure."""
 
 import random
-import string
+from importlib import import_module
 import pytest
-from itertools import product, chain
+from itertools import product
 from collections import namedtuple
+from cases import TEST_CASES, make_unique_value
+
+# These constants are to be modified depending on the particular names and
+# choices made by the students.
+MODULENAME = 'dll'
+CLASSNAME = 'DLL'
+NODE_CLASSNAME = 'Node'
+NODE_VAL_ATTR = 'val'
+HEAD_ATTR = 'head'
+REMOVE_ERROR = None
+
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
+Node = getattr(module, NODE_CLASSNAME)
+
 
 REQ_METHODS = [
     'push',
@@ -28,45 +44,19 @@ DLLFixture = namedtuple(
     )
 )
 
-EDGE_CASES = [
-    (),
-    (0,),
-    (0, 1),
-    (1, 0),
-    '',
-    'a',
-    'ab',
-    'ba',
-]
-
-# lists of ints
-INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 100)) for n in range(10))
-
-# strings
-STR_TEST_CASES = (random.sample(string.printable,
-                  random.randrange(2, 100)) for n in range(10))
-
-# LIST_TEST_CASES
-# SET_TEST_CASES
-# DICT_TEST_CASES
-
-TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
-
 
 POP = list(range(3))
 SHIFT = list(range(3))
-REMOVE = list(range(3))
+# REMOVE = list(range(3))
 TEST_CASES = product(TEST_CASES, POP, SHIFT)
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_dll(request):
     """Return a new empty instance of MyQueue."""
-    from double import DList
     sequence, pop, shift = request.param
 
-    instance = DList()
+    instance = ClassDef()
     for val in sequence:
         instance.append(val)
 
@@ -118,30 +108,26 @@ def new_dll(request):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that queue has all the correct methods."""
-    from double import DList
-    assert hasattr(DList(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_push_pop(new_dll):
     """Test that unique pushed item is popped."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEPUSHPOPVALUE').hexdigest()
+    val = make_unique_value()
     new_dll.instance.push(val)
     assert new_dll.instance.pop() == val
 
 
 def test_append_shift(new_dll):
     """Test that unique appended item is popped after all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEAPPENDSHIFTVALUE').hexdigest()
+    val = make_unique_value()
     new_dll.instance.append(val)
     assert new_dll.instance.shift() == val
 
 
 def test_push_shift(new_dll):
     """Test that unique pushed item is shifted after all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEPUSHSHIFTVALUE').hexdigest()
+    val = make_unique_value()
     new_dll.instance.push(val)
     for _ in new_dll.sequence:
         new_dll.instance.shift()
@@ -150,8 +136,7 @@ def test_push_shift(new_dll):
 
 def test_append_pop(new_dll):
     """Test that unique appended item is popped after all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEAPPENDPOPVALUE').hexdigest()
+    val = make_unique_value()
     new_dll.instance.append(val)
     for _ in new_dll.sequence:
         new_dll.instance.pop()
@@ -214,7 +199,6 @@ def test_remove_valid(new_dll):
 
 def test_remove_error(new_dll):
     """Test remove throws ValueError when asked to remove a value not in DLL."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEREMOVEVALUE').hexdigest()
+    val = make_unique_value()
     with pytest.raises(new_dll.remove_error):
         new_dll.instance.remove(val)

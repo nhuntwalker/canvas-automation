@@ -14,7 +14,7 @@ CLASSNAME = 'LinkedList'
 NODE_CLASSNAME = 'Node'
 NODE_VAL_ATTR = 'val'
 HEAD_ATTR = 'head'
-REMOVE_ERROR = None
+REMOVE_ERROR = ValueError
 
 
 module = import_module(MODULENAME)
@@ -40,7 +40,6 @@ LinkedListFixture = namedtuple(
         'pop_error',
         'size',
         'search_val',
-        'remove_node',
         'display_result',
     )
 )
@@ -69,14 +68,12 @@ def new_ll(request):
         last = sequence[-1]
         pop_error = None
         search_val = random.choice(sequence)
-        remove_node = instance.search(random.choice(sequence))
 
     else:
         first = None
         last = None
         pop_error = IndexError
         search_val = None
-        remove_node = None
 
     size = len(sequence)
     display_result = str(tuple(reversed(sequence)))
@@ -89,7 +86,6 @@ def new_ll(request):
         pop_error,
         size,
         search_val,
-        remove_node,
         display_result,
     )
 
@@ -156,11 +152,12 @@ def test_search_not_present(new_ll):
     assert new_ll.instance.search(val) is None
 
 
-def test_remove(new_ll):
+def test_remove_contents(new_ll):
     """Test that remove method of node removes it from the data structure."""
-    new_ll.instance.remove(new_ll.remove_node)
-    contents = set(new_ll.instance.pop() for _ in range(new_ll.size - 1))
-    assert getattr(new_ll.remove_node, NODE_VAL_ATTR) not in contents
+    remove_node = new_ll.instance.search(new_ll.search_val)
+    new_ll.instance.remove(remove_node)
+    new_contents = [new_ll.instance.pop() for _ in range(new_ll.size - 1)]
+    assert new_contents.count(new_ll.search_val) < new_ll.sequence.count(new_ll.search_val)
 
 
 def test_remove_fake_node(new_ll):

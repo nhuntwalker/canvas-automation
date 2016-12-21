@@ -31,8 +31,8 @@ INT_EDGE_CASES = [
     (0,),
     (0, 1),
     (1, 0),
-    range(100),
-    range(99, -1, -1),
+    list(range(100)),
+    list(range(99, -1, -1)),
     [1] * 10,
     _random_with_dupes(range(100))
 ]

@@ -14,8 +14,7 @@ CLASSNAME = 'DLL'
 NODE_CLASSNAME = 'Node'
 NODE_VAL_ATTR = 'val'
 HEAD_ATTR = 'head'
-REMOVE_ERROR = None
-
+REMOVE_ERROR = ValueError
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -47,14 +46,15 @@ DLLFixture = namedtuple(
 
 POP = list(range(3))
 SHIFT = list(range(3))
-# REMOVE = list(range(3))
+REMOVE = list(range(3))  # implement removes in setup
 TEST_CASES = product(TEST_CASES, POP, SHIFT)
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_dll(request):
-    """Return a new empty instance of MyQueue."""
+    """Return a new empty instance of DLLFixture."""
     sequence, pop, shift = request.param
+    sequence = list(sequence)
 
     instance = ClassDef()
     for val in sequence:
@@ -77,9 +77,9 @@ def new_dll(request):
         last = sequence[-1]
         pop_error = None
 
-        remove_idx = random.randrange(len(sequence))
-        remove_val = sequence[remove_idx]
-        sequence_after_remove = sequence[:remove_idx] + sequence[remove_idx + 1:]
+        sequence_after_remove = sequence[:]
+        remove_val = random.choice(sequence)
+        sequence_after_remove.remove(remove_val)
         # first, last, middle
         # multiple removes
 

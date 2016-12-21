@@ -1,11 +1,27 @@
 """Standardized tests for Priority Queue data structure."""
 
 import random
-import string
 import pytest
+from importlib import import_module
 from operator import itemgetter
 from collections import namedtuple
-from itertools import product, chain, repeat, cycle
+from itertools import product, repeat, cycle
+from cases import (
+    TEST_CASES,
+    MAX_INT,
+    MIN_INT,
+    make_unique_value,
+)
+
+
+MODULENAME = 'priority_queue'
+CLASSNAME = 'PriorityQueue'
+# Highest priority when MAX=True
+# Lowest priority first when MAX=False
+MAX = True
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
 
 REQ_METHODS = [
     'insert',
@@ -26,57 +42,32 @@ PQueueFixture = namedtuple(
 # case where all vals are unique has vals
 
 
-EDGE_CASES = [
-    (),
-    (0,),
-    (0, 1),
-    (1, 0),
-    (0, ) * 100,  # all the same value
-    '',
-    'a',
-    'ab',
-    'ba',
-]
-
 PRIORITIES = [
     repeat(0),  # all the same priority
     cycle((0, 1)),  # equal mix of two priorities
     random.sample(range(-10000, 10000), 100),  # 100 unique priorities
     (random.randrange(10) for _ in range(100))  # 100 random mix of ints 0-9
 ]
-# lists of ints
-INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 20)) for _ in range(10))
 
-# strings
-STR_TEST_CASES = (random.sample(string.printable,
-                  random.randrange(2, 20)) for _ in range(10))
-
-# iter of all test cases
-TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
 # iters of tuples for every combination of priority and input sequence
 TEST_CASES = (zip(t, p) for t, p in product(TEST_CASES, PRIORITIES))
 
-POP = range(3)
+POP = list(range(3))
 PEEK = (True, False)
 
 TEST_CASES = product(TEST_CASES, POP, PEEK)
 
-MAX = True
-LIMIT = 999999999999999999999999999
-
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_priorityq(request):
-    """Return a new empty instance of MyQueue."""
-    from priorityq import PriorityQueue
+    """Return a new empty instance of PQueueFixture."""
     sequence, pop, peek = request.param
     sequence = list(sequence)
 
     # sort sequence by second item
     sorted_sequence = sorted(sequence, key=itemgetter(1), reverse=MAX)
 
-    instance = PriorityQueue()
+    instance = ClassDef()
     for tup in sequence:
         try:
             instance.insert(*tup)
@@ -108,8 +99,7 @@ def new_priorityq(request):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that queue has all the correct methods."""
-    from priorityq import PriorityQueue
-    assert hasattr(PriorityQueue(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_pop(new_priorityq):
@@ -121,18 +111,16 @@ def test_pop(new_priorityq):
 
 def test_insert_pop_top_priority(new_priorityq):
     """Test unique item inserted with top priority is immediately popped."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEFLAGVALUE').hexdigest()
-    priority = LIMIT if MAX else -LIMIT
+    val = make_unique_value()
+    priority = MAX_INT if MAX else MIN_INT
     new_priorityq.instance.insert(val, priority)
     assert new_priorityq.instance.pop() == val
 
 
 def test_insert_pop_bottom_priority(new_priorityq):
     """Test unique item insertd with low priority is popped last."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEFLAGVALUE').hexdigest()
-    priority = -LIMIT if MAX else LIMIT
+    val = make_unique_value()
+    priority = MIN_INT if MAX else MAX_INT
     new_priorityq.instance.insert(val, priority)
     for _ in new_priorityq.sorted_sequence:
         new_priorityq.instance.pop()

@@ -1,10 +1,17 @@
 """Standardized tests for Deque data structure."""
 
 import random
-import string
 import pytest
-from itertools import product, chain
+from itertools import product
 from collections import namedtuple
+from importlib import import_module
+from cases import TEST_CASES, make_unique_value
+
+MODULENAME = 'deque'
+CLASSNAME = 'Deque'
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
 
 REQ_METHODS = [
     'append',
@@ -30,49 +37,25 @@ DequeFixture = namedtuple(
     )
 )
 
-EDGE_CASES = [
-    (),
-    (0,),
-    (0, 1),
-    (1, 0),
-    '',
-    'a',
-    'ab',
-    'ba',
-]
-
-# lists of ints
-INT_TEST_CASES = (random.sample(range(1000),
-                  random.randrange(2, 100)) for n in range(10))
-
-# strings
-STR_TEST_CASES = (random.sample(string.printable,
-                  random.randrange(2, 100)) for n in range(10))
-
-# LIST_TEST_CASES
-# SET_TEST_CASES
-# DICT_TEST_CASES
-
-TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
-
 
 POP = list(range(3))
 POPLEFT = list(range(3))
-REMOVE = list(range(3))
+REMOVE = list(range(3))  # implement removes in setup
 TEST_CASES = product(TEST_CASES, POPLEFT, POP)
 
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_deque(request):
-    """Return a new empty instance of MyQueue."""
+    """Return a new empty instance of DequeFixture."""
     from deque import Deque
     sequence, popleft, pop = request.param
+    sequence = list(sequence)
 
     instance = Deque()
     for val in sequence:
         instance.append(val)
 
-    # Also construct by appending or combination of the two
+    # Also construct by appending left or combination of the two
 
     if popleft and sequence:
         for _ in range(min(len(sequence), popleft)):
@@ -89,9 +72,9 @@ def new_deque(request):
         last = sequence[-1]
         pop_error = None
 
-        remove_idx = random.randrange(len(sequence))
-        remove_val = sequence[remove_idx]
-        sequence_after_remove = sequence[:remove_idx] + sequence[remove_idx + 1:]
+        sequence_after_remove = sequence[:]
+        remove_val = random.choice(sequence)
+        sequence_after_remove.remove(remove_val)
         # first, last, middle
         # multiple removes
 
@@ -120,30 +103,26 @@ def new_deque(request):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that queue has all the correct methods."""
-    from deque import Deque
-    assert hasattr(Deque(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_appendleft_popleft(new_deque):
     """Test that unique appendlefted item is popped."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEAPPENDLEFTPOPVALUE').hexdigest()
+    val = make_unique_value()
     new_deque.instance.appendleft(val)
     assert new_deque.instance.popleft() == val
 
 
 def test_append_pop(new_deque):
     """Test that unique appended item is popped after all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEAPPENDPOPVALUE').hexdigest()
+    val = make_unique_value()
     new_deque.instance.append(val)
     assert new_deque.instance.pop() == val
 
 
 def test_appendleft_pop(new_deque):
     """Test that unique appendlefted item is poped after all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEAPPENDLEFTPOPVALUE').hexdigest()
+    val = make_unique_value()
     new_deque.instance.appendleft(val)
     for _ in new_deque.sequence:
         new_deque.instance.pop()
@@ -152,8 +131,7 @@ def test_appendleft_pop(new_deque):
 
 def test_append_popleft(new_deque):
     """Test that unique appended item is popped after all other items."""
-    from hashlib import md5
-    val = md5(b'SUPERUNIQUEAPPENDPOPVALUE').hexdigest()
+    val = make_unique_value()
     new_deque.instance.append(val)
     for _ in new_deque.sequence:
         new_deque.instance.popleft()

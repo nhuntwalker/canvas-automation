@@ -56,7 +56,7 @@ def new_dll(request):
     for val in sequence:
         instance.append(val)
 
-    # Also construct by appending or combination of the two
+    # Also construct by pushing or combination of the two
 
     if pop and sequence:
         for _ in range(min(len(sequence), pop)):

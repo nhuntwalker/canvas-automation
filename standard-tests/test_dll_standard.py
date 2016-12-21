@@ -11,14 +11,10 @@ from cases import TEST_CASES, make_unique_value
 # choices made by the students.
 MODULENAME = 'dll'
 CLASSNAME = 'DLL'
-NODE_CLASSNAME = 'Node'
-NODE_VAL_ATTR = 'val'
-HEAD_ATTR = 'head'
 REMOVE_ERROR = ValueError
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
-Node = getattr(module, NODE_CLASSNAME)
 
 
 REQ_METHODS = [

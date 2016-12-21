@@ -7,7 +7,7 @@ from collections import namedtuple
 from importlib import import_module
 from cases import TEST_CASES, make_unique_value
 
-MODULENAME = 'Deque'
+MODULENAME = 'deque'
 CLASSNAME = 'Deque'
 
 module = import_module(MODULENAME)

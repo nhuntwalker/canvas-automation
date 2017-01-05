@@ -217,4 +217,4 @@ if __name__ == '__main__':
         except OSError:
             fail_list.append(path)
 
-    print(fail_list)
+    print('FAILED: ', fail_list)

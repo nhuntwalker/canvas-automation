@@ -182,6 +182,17 @@ def get_git_repo(submission, student, path):
     call(['git', 'pull', '--no-edit', 'origin', refspec], cwd=path)
 
 
+def print_failures(fail_list):
+    """Print failuers from main script.
+
+    This appears to happen when someone does not submit a valid PR.
+    """
+    print('----------' * 5)
+    print('FAILURES:')
+    for fail in fail_list:
+        print(re.split(DEFAULT_ROOT_NAME, fail)[1])
+
+
 if __name__ == '__main__':
 
     fail_list = []
@@ -217,5 +228,5 @@ if __name__ == '__main__':
         except OSError:
             fail_list.append(path)
 
-    print('----------' * 5)
-    print('FAILED: ', fail_list)
+    if len(fail_list):
+        print_failures(fail_list)

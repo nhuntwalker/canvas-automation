@@ -184,6 +184,7 @@ def get_git_repo(submission, student, path):
 
 if __name__ == '__main__':
 
+    fail_list = []
     try:
         dir_order = sys.argv[1]
     except IndexError:
@@ -211,4 +212,9 @@ if __name__ == '__main__':
         # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
-        get_git_repo(sub, stu, path)
+        try:
+            get_git_repo(sub, stu, path)
+        except OSError:
+            fail_list.append(path)
+
+    print(fail_list)

@@ -24,8 +24,8 @@ GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 DEFAULT_DIR_ORDER = 'as'
 DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
-FILEXISTS_ERRNO = 17
-FILEDOESNOTEXIST_ERRNO = 2
+FILEXISTS_ERR_NUM = 17
+FILEDOESNOTEXIST_ERR_NUM = 2
 
 
 def api_request(url, **kwargs):
@@ -114,9 +114,9 @@ def make_directory(path):
         os.mkdir(path)
     except OSError as e:
         # Path already exists; ignore.
-        if e.errno == FILEXISTS_ERRNO:
+        if e.errno == FILEXISTS_ERR_NUM:
             pass
-        elif e.errno == FILEDOESNOTEXIST_ERRNO:
+        elif e.errno == FILEDOESNOTEXIST_ERR_NUM:
             # Parent path does not exist; try to make it.
             parent, child = os.path.split(path)
             make_directory(parent)

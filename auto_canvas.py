@@ -40,7 +40,15 @@ def api_request(url, **kwargs):
     params = DEFAULT_PARAMS.copy()
     params.update(kwargs)
     response = requests.get(url, params=params)
-    result = response.json()
+    try:
+        result = response.json()
+    except:
+        # import pdb; pdb.set_trace()
+        curr_page = re.search('&page=(\d+)', url).group(1)
+        url = API_ROOT + '/courses/' + COURSE_ID + '/students/submissions?include%5B%5D=assignment&include%5B%5D=user&student_ids=all&page=' + curr_page + '&per_page=100'
+        response = requests.get(url, params=params)
+        result = response.json()
+
     # Currently assumes that result is a list of json objects.
     for item in result:
         yield item
@@ -54,6 +62,7 @@ def api_request(url, **kwargs):
 
 def joined_api_request(*args, **kwargs):
     """Return JSON from a sub-attribute of a given course."""
+    # print(args, kwargs.items())
     url = '/'.join(args + ('', ))
     for item in api_request(url, **kwargs):
         yield item
@@ -138,6 +147,7 @@ def is_git_repo(submission):
         url = submission['url'] or ''
     except KeyError:
         return False
+
     return all((
         sub_type == 'online_url',
         re.match(GITHUB_REPO_PAT, url),
@@ -206,7 +216,6 @@ if __name__ == '__main__':
         sys.exit()
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
-
     submissions = get_course_submissions(COURSE_ID)
     submissions_to_grade = filter(needs_grading, submissions)
     github_submissions = filter(is_git_repo, submissions_to_grade)

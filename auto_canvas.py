@@ -43,7 +43,7 @@ def api_request(url, **kwargs):
     try:
         result = response.json()
     except:
-        # import pdb; pdb.set_trace()
+        # slightly hacky, but will fix later
         curr_page = re.search('&page=(\d+)', url).group(1)
         url = API_ROOT + '/courses/' + COURSE_ID + '/students/submissions?include%5B%5D=assignment&include%5B%5D=user&student_ids=all&page=' + curr_page + '&per_page=100'
         response = requests.get(url, params=params)
@@ -62,7 +62,6 @@ def api_request(url, **kwargs):
 
 def joined_api_request(*args, **kwargs):
     """Return JSON from a sub-attribute of a given course."""
-    # print(args, kwargs.items())
     url = '/'.join(args + ('', ))
     for item in api_request(url, **kwargs):
         yield item

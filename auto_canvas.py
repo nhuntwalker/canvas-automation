@@ -1,11 +1,4 @@
-"""Generate directories for Python 401d4 class assignments."""
-
-# Todo
-# Check submission status: only try to git clone if it needs grading
-# proper argparse
-# check if submission type is a .py or other type of file; download that
-# may be able to use /tree/ or /blob/ as refspecs instead of master
-# Handle git merge message prompt on pull; handle git merge conflict
+"""Generate directories for Ungraded Canvas Course Submissions."""
 
 from __future__ import unicode_literals
 import os
@@ -31,8 +24,8 @@ GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 DEFAULT_DIR_ORDER = 'as'
 DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
-FILEXISTS_ERRNO = 17
-FILEDOESNOTEXIST_ERRNO = 2
+FILEXISTS_ERR_NUM = 17
+FILEDOESNOTEXIST_ERR_NUM = 2
 
 
 def api_request(url, **kwargs):
@@ -40,7 +33,9 @@ def api_request(url, **kwargs):
     params = DEFAULT_PARAMS.copy()
     params.update(kwargs)
     response = requests.get(url, params=params)
+
     try:
+        # Currently assumes that result is a list of json objects.
         result = response.json()
     except:
         # slightly hacky, but will fix later
@@ -49,7 +44,6 @@ def api_request(url, **kwargs):
         response = requests.get(url, params=params)
         result = response.json()
 
-    # Currently assumes that result is a list of json objects.
     for item in result:
         yield item
     try:
@@ -130,9 +124,9 @@ def make_directory(path):
         os.mkdir(path)
     except OSError as e:
         # Path already exists; ignore.
-        if e.errno == FILEXISTS_ERRNO:
+        if e.errno == FILEXISTS_ERR_NUM:
             pass
-        elif e.errno == FILEDOESNOTEXIST_ERRNO:
+        elif e.errno == FILEDOESNOTEXIST_ERR_NUM:
             # Parent path does not exist; try to make it.
             parent, child = os.path.split(path)
             make_directory(parent)
@@ -225,10 +219,6 @@ if __name__ == '__main__':
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['name'], sub['url'])
         )
-
-        # import pdb;pdb.set_trace()
-
-        # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
         try:

@@ -33,7 +33,17 @@ def api_request(url, **kwargs):
     params = DEFAULT_PARAMS.copy()
     params.update(kwargs)
     response = requests.get(url, params=params)
-    result = response.json()
+
+    try:
+        # Currently assumes that result is a list of json objects.
+        result = response.json()
+    except:
+        # slightly hacky, but will fix later
+        curr_page = re.search('&page=(\d+)', url).group(1)
+        url = API_ROOT + '/courses/' + COURSE_ID + '/students/submissions?include%5B%5D=assignment&include%5B%5D=user&student_ids=all&page=' + curr_page + '&per_page=100'
+        response = requests.get(url, params=params)
+        result = response.json()
+
     for item in result:
         yield item
     try:
@@ -130,6 +140,7 @@ def is_git_repo(submission):
         url = submission['url'] or ''
     except KeyError:
         return False
+
     return all((
         sub_type == 'online_url',
         re.match(GITHUB_REPO_PAT, url),
@@ -174,8 +185,20 @@ def get_git_repo(submission, student, path):
     call(['git', 'pull', '--no-edit', 'origin', refspec], cwd=path)
 
 
+def print_failures(fail_list):
+    """Print failuers from main script.
+
+    This appears to happen when someone does not submit a valid PR.
+    """
+    print('----------' * 5)
+    print('FAILURES:')
+    for fail in fail_list:
+        print(re.split(DEFAULT_ROOT_NAME, fail)[1])
+
+
 if __name__ == '__main__':
 
+    fail_list = []
     try:
         dir_order = sys.argv[1]
     except IndexError:
@@ -186,7 +209,6 @@ if __name__ == '__main__':
         sys.exit()
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
-
     submissions = get_course_submissions(COURSE_ID)
     submissions_to_grade = filter(needs_grading, submissions)
     github_submissions = filter(is_git_repo, submissions_to_grade)
@@ -200,4 +222,10 @@ if __name__ == '__main__':
 
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
-        get_git_repo(sub, stu, path)
+        try:
+            get_git_repo(sub, stu, path)
+        except OSError:
+            fail_list.append(path)
+
+    if len(fail_list):
+        print_failures(fail_list)

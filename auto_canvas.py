@@ -198,8 +198,6 @@ if __name__ == '__main__':
             stu['name'], asgn['name'], sub['url'])
         )
 
-        # import pdb;pdb.set_trace()
-
         # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)

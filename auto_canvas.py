@@ -1,17 +1,9 @@
-"""Generate directories for Python 401d4 class assignments."""
-
-# Todo
-# Check submission status: only try to git clone if it needs grading
-# proper argparse
-# check if submission type is a .py or other type of file; download that
-# may be able to use /tree/ or /blob/ as refspecs instead of master
-# Handle git merge message prompt on pull; handle git merge conflict
+"""Generate directories for Ungraded Canvas Course Submissions."""
 
 from __future__ import unicode_literals
 import os
 import re
 import sys
-import argparse
 import requests
 from subprocess import call
 from string import punctuation
@@ -19,17 +11,21 @@ from string import punctuation
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_ROOT_NAME = 'grading'
 
-TOKEN = os.environ['API_TOKEN']
-COURSE_ID = os.environ['COURSE_ID']
-API_ROOT = 'https://canvas.instructure.com/api/v1/'
+try:
+    TOKEN = os.environ['API_TOKEN']
+    COURSE_ID = os.environ['COURSE_ID']
+except KeyError:
+    raise KeyError('Please activate your secret file containing tokens.')
+
+API_ROOT = 'https://canvas.instructure.com/api/v1'
 DEFAULT_PARAMS = {'access_token': TOKEN, 'per_page': 999999}
 BAD_CHARS_PAT = re.compile(r'[' + re.escape(punctuation) + r']+')
 GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 DEFAULT_DIR_ORDER = 'as'
 DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
-FILEXISTS_ERRNO = 17
-FILEDOESNOTEXIST_ERRNO = 2
+FILEXISTS_ERR_NUM = 17
+FILEDOESNOTEXIST_ERR_NUM = 2
 
 
 def api_request(url, **kwargs):
@@ -38,7 +34,6 @@ def api_request(url, **kwargs):
     params.update(kwargs)
     response = requests.get(url, params=params)
     result = response.json()
-    # Currently assumes that result is a list of json objects.
     for item in result:
         yield item
     try:
@@ -87,7 +82,9 @@ def get_course_submissions(course_id):
 
 def get_assignment_submissions(asgn):
     """Return list of submission dicts for the specified assignment."""
-    url = asgn.get('url', asgn.get('submissions_download_url', '').split('?')[0])
+    url = asgn.get(
+        'url',
+        asgn.get('submissions_download_url', '').split('?')[0])
     for submission in joined_api_request(url, 'submissions', include='user'):
         yield submission
 
@@ -117,9 +114,9 @@ def make_directory(path):
         os.mkdir(path)
     except OSError as e:
         # Path already exists; ignore.
-        if e.errno == FILEXISTS_ERRNO:
+        if e.errno == FILEXISTS_ERR_NUM:
             pass
-        elif e.errno == FILEDOESNOTEXIST_ERRNO:
+        elif e.errno == FILEDOESNOTEXIST_ERR_NUM:
             # Parent path does not exist; try to make it.
             parent, child = os.path.split(path)
             make_directory(parent)
@@ -168,10 +165,13 @@ def get_git_repo(submission, student, path):
     print('cloning from {}'.format(repo_url))
     call(['git', 'clone', repo_url, path], cwd=path)
     print('fetching from refspec: {}'.format(refspec))
-    call(['git', 'fetch', 'origin', ':'.join((refspec, local_branchname))], cwd=path)
+    call(
+        ['git', 'fetch', 'origin', ':'.join((refspec, local_branchname))],
+        cwd=path
+    )
     call(['git', 'checkout', local_branchname], cwd=path)
     print('pulling from refspec: {}'.format(refspec))
-    call(['git', 'pull', 'origin', refspec], cwd=path)
+    call(['git', 'pull', '--no-edit', 'origin', refspec], cwd=path)
 
 
 if __name__ == '__main__':
@@ -198,7 +198,6 @@ if __name__ == '__main__':
             stu['name'], asgn['name'], sub['url'])
         )
 
-        # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
         get_git_repo(sub, stu, path)

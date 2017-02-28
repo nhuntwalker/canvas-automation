@@ -11,8 +11,8 @@ REQ_METHODS = [
     'pop',
 ]
 
-MyQueueFixture = namedtuple(
-    'MyStackFixture',
+StackFixture = namedtuple(
+    'StackFixture',
     ('instance', 'first', 'last', 'sequence', 'pop_error')
 )
 
@@ -49,7 +49,7 @@ TEST_CASES = product(TEST_CASES, POP)
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_stack(request):
-    """Return a new empty instance of MyQueue."""
+    """Return a namedtuple containing test information."""
     from stack import Stack
     sequence, pop = request.param
 
@@ -71,13 +71,14 @@ def new_stack(request):
         last = None
         pop_error = IndexError
 
-    return MyQueueFixture(instance, first, last, sequence, pop_error)
+    return StackFixture(instance, first, last, sequence, pop_error)
 
 
 @pytest.mark.parametrize('method', REQ_METHODS)
-def test_has_method(method, new_stack):
+def test_has_method(method):
     """Test that queue has all the correct methods."""
-    assert hasattr(new_stack.instance, method)
+    from stack import Stack
+    assert hasattr(Stack(), method)
 
 
 def test_push(new_stack):

@@ -219,6 +219,7 @@ if __name__ == '__main__':
         print("\n{}'s submission for {}: {}".format(
             stu['name'], asgn['name'], sub['url'])
         )
+
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
         try:

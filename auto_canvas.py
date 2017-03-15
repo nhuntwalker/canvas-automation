@@ -8,10 +8,11 @@ import requests
 from subprocess import call
 from string import punctuation
 
+# strings of student id's or blank for all
+MY_STUDENT_IDS = []
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_ROOT_NAME = 'grading'
-
-MY_STUDENT_IDS = []     # strings of student id's or blank for all
 
 try:
     TOKEN = os.environ['API_TOKEN']

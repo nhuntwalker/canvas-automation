@@ -43,7 +43,6 @@ def api_request(url, **kwargs):
     params = DEFAULT_PARAMS.copy()
     params.update(kwargs)
     response = requests.get(url, params=params)
-    print('url:', response.url)
 
     try:
         # Currently assumes that result is a list of json objects.

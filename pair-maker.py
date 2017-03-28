@@ -7,14 +7,16 @@ import random
 
 
 def make_better_pairs(num_days, students):
-    """Print out some pairs."""
+    """Print out some pairs for a given number of days."""
     student_dict = {}
 
     for student in students:
         temp = dict({})
+
         for s in students:
             if s != student:
                 temp.setdefault(s, 0)
+
         student_dict[student] = temp
 
     for day in range(0, num_days):
@@ -22,22 +24,22 @@ def make_better_pairs(num_days, students):
         random.shuffle(students)
 
         print('')
-        print('Day', day + 1)
-        print('-------')
+        print(' - Day', day + 1, '-')
+        print('------------')
 
         for student in students:
             if student not in used:
 
                 try:
-                    pair = min([(v, k) for k, v in student_dict[student].items() if k not in used])[1]
+                    partner = min([(v, k) for k, v in student_dict[student].items() if k not in used])[1]
                     used.add(student)
-                    used.add(pair)
-                    student_dict[student][pair] += 1
-                    student_dict[pair][student] += 1
-                    print(student, '-', pair)
+                    used.add(partner)
+                    student_dict[student][partner] += 1
+                    student_dict[partner][student] += 1
+                    print(student, '-', partner)
 
                 except ValueError:
-                    print('-->', student, 'must be a third')
+                    print('-->', student, 'must be a third.')
 
 
 if __name__ == '__main__':

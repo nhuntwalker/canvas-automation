@@ -3,8 +3,6 @@
 David Smith - 2017
 """
 
-import random
-
 
 def make_better_pairs(num_days, students):
     """Print out some pairs for a given number of days."""

@@ -21,7 +21,7 @@ def make_better_pairs(num_days, students):
 
     for day in range(0, num_days):
         used = set()
-        random.shuffle(students)
+        students = sorted(students, key=lambda x: sorted(student_dict[x].values())[-1], reverse=True)
 
         print('')
         print(' - Day', day + 1, '-')
@@ -40,6 +40,8 @@ def make_better_pairs(num_days, students):
 
                 except ValueError:
                     print('-->', student, 'must be a third.')
+    for k in student_dict:
+        print(k, student_dict[k])
 
 
 if __name__ == '__main__':

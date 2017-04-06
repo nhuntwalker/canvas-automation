@@ -1,5 +1,7 @@
 .secret
 grading/
+labs/
+class-material/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

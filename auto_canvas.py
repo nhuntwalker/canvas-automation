@@ -8,6 +8,9 @@ import requests
 from subprocess import call
 from string import punctuation
 
+# strings of student id's or blank for all
+MY_STUDENT_IDS = []
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_ROOT_NAME = 'grading'
 
@@ -28,6 +31,13 @@ FILEXISTS_ERR_NUM = 17
 FILEDOESNOTEXIST_ERR_NUM = 2
 
 
+def students_request_string(students=MY_STUDENT_IDS):
+    """Return list of strings for request of student id's."""
+    if not students:
+        return ['all']
+    return students
+
+
 def api_request(url, **kwargs):
     """Return json information from specified API query."""
     params = DEFAULT_PARAMS.copy()
@@ -39,9 +49,14 @@ def api_request(url, **kwargs):
         result = response.json()
     except:
         # slightly hacky, but will fix later
+        print('\n', '!! server error, resetting parameters!')
         curr_page = re.search('&page=(\d+)', url).group(1)
-        url = API_ROOT + '/courses/' + COURSE_ID + '/students/submissions?include%5B%5D=assignment&include%5B%5D=user&student_ids=all&page=' + curr_page + '&per_page=100'
+        students = '&student_ids[]='.join(students_request_string())
+        url = API_ROOT + '/courses/' + COURSE_ID + \
+            '/students/submissions?include%5B%5D=assignment&include%5B%5D=user&'\
+            + students + '&page=' + curr_page + '&per_page=100'
         response = requests.get(url, params=params)
+        print('request:', response.url, '\n')
         result = response.json()
 
     for item in result:
@@ -85,7 +100,11 @@ def get_course_assignments(course_id):
 def get_course_submissions(course_id):
     """Return list of submission dicts of the course specified by ID."""
     args = (API_ROOT, 'courses', course_id, 'students', 'submissions')
-    kwargs = {'student_ids': 'all', 'include[]': ['assignment', 'user']}
+    kwargs = {
+        'student_ids[]': students_request_string(),
+        'include[]': ['assignment', 'user']
+    }
+
     for submission in joined_api_request(*args, **kwargs):
         yield submission
 

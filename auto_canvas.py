@@ -1,11 +1,4 @@
-"""Generate directories for Python 401d4 class assignments."""
-
-# Todo
-# Check submission status: only try to git clone if it needs grading
-# proper argparse
-# check if submission type is a .py or other type of file; download that
-# may be able to use /tree/ or /blob/ as refspecs instead of master
-# Handle git merge message prompt on pull; handle git merge conflict
+"""Generate directories for Ungraded Canvas Course Submissions."""
 
 from __future__ import unicode_literals
 import os
@@ -14,6 +7,9 @@ import sys
 import requests
 from subprocess import call
 from string import punctuation
+
+# strings of student id's or blank for all
+MY_STUDENT_IDS = []
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_ROOT_NAME = 'grading'
@@ -31,8 +27,15 @@ GITHUB_REPO_PAT = re.compile(r'https://github.com/.+/.+')
 DEFAULT_DIR_ORDER = 'as'
 DIR_ORDERS = 'mas', 'as', 'sa', 'msa'
 
-FILEXISTS_ERRNO = 17
-FILEDOESNOTEXIST_ERRNO = 2
+FILEXISTS_ERR_NUM = 17
+FILEDOESNOTEXIST_ERR_NUM = 2
+
+
+def students_request_string(students=MY_STUDENT_IDS):
+    """Return list of strings for request of student id's."""
+    if not students:
+        return ['all']
+    return students
 
 
 def api_request(url, **kwargs):
@@ -40,8 +43,22 @@ def api_request(url, **kwargs):
     params = DEFAULT_PARAMS.copy()
     params.update(kwargs)
     response = requests.get(url, params=params)
-    result = response.json()
-    # Currently assumes that result is a list of json objects.
+
+    try:
+        # Currently assumes that result is a list of json objects.
+        result = response.json()
+    except:
+        # slightly hacky, but will fix later
+        print('\n', '!! server error, resetting parameters!')
+        curr_page = re.search('&page=(\d+)', url).group(1)
+        students = '&student_ids[]='.join(students_request_string())
+        url = API_ROOT + '/courses/' + COURSE_ID + \
+            '/students/submissions?include%5B%5D=assignment&include%5B%5D=user&'\
+            + students + '&page=' + curr_page + '&per_page=100'
+        response = requests.get(url, params=params)
+        print('request:', response.url, '\n')
+        result = response.json()
+
     for item in result:
         yield item
     try:
@@ -83,7 +100,11 @@ def get_course_assignments(course_id):
 def get_course_submissions(course_id):
     """Return list of submission dicts of the course specified by ID."""
     args = (API_ROOT, 'courses', course_id, 'students', 'submissions')
-    kwargs = {'student_ids': 'all', 'include[]': ['assignment', 'user']}
+    kwargs = {
+        'student_ids[]': students_request_string(),
+        'include[]': ['assignment', 'user']
+    }
+
     for submission in joined_api_request(*args, **kwargs):
         yield submission
 
@@ -122,9 +143,9 @@ def make_directory(path):
         os.mkdir(path)
     except OSError as e:
         # Path already exists; ignore.
-        if e.errno == FILEXISTS_ERRNO:
+        if e.errno == FILEXISTS_ERR_NUM:
             pass
-        elif e.errno == FILEDOESNOTEXIST_ERRNO:
+        elif e.errno == FILEDOESNOTEXIST_ERR_NUM:
             # Parent path does not exist; try to make it.
             parent, child = os.path.split(path)
             make_directory(parent)
@@ -138,6 +159,7 @@ def is_git_repo(submission):
         url = submission['url'] or ''
     except KeyError:
         return False
+
     return all((
         sub_type == 'online_url',
         re.match(GITHUB_REPO_PAT, url),
@@ -182,8 +204,20 @@ def get_git_repo(submission, student, path):
     call(['git', 'pull', '--no-edit', 'origin', refspec], cwd=path)
 
 
+def print_failures(fail_list):
+    """Print failuers from main script.
+
+    This appears to happen when someone does not submit a valid PR.
+    """
+    print('----------' * 5)
+    print('FAILURES:')
+    for fail in fail_list:
+        print(re.split(DEFAULT_ROOT_NAME, fail)[1])
+
+
 if __name__ == '__main__':
 
+    fail_list = []
     try:
         dir_order = sys.argv[1]
     except IndexError:
@@ -194,7 +228,6 @@ if __name__ == '__main__':
         sys.exit()
 
     root = os.path.join(HERE, DEFAULT_ROOT_NAME)
-
     submissions = get_course_submissions(COURSE_ID)
     submissions_to_grade = filter(needs_grading, submissions)
     github_submissions = filter(is_git_repo, submissions_to_grade)
@@ -206,9 +239,12 @@ if __name__ == '__main__':
             stu['name'], asgn['name'], sub['url'])
         )
 
-        # import pdb;pdb.set_trace()
-
-        # download .py or other files
         path = make_dir_path(root, asgn, stu, dir_order)
         make_directory(path)
-        get_git_repo(sub, stu, path)
+        try:
+            get_git_repo(sub, stu, path)
+        except OSError:
+            fail_list.append(path)
+
+    if len(fail_list):
+        print_failures(fail_list)

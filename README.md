@@ -3,6 +3,7 @@ Automate repetitive tasks for grading submissions in Canvas
 
 
 [test](#user-content-setup)
+[test2](#user-content-re-activate-virtual-environment)
 
 # Setup:
 - ##### clone repo

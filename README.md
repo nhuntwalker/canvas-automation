@@ -2,8 +2,10 @@
 Automate repetitive tasks for grading submissions in Canvas
 
 
+[test](#Setup)
+
 # Setup:
-- ##### clone down repo
+- ##### clone repo
 ```
   git clone https://github.com/WillWeatherford/canvas-automation.git
 ```
@@ -45,6 +47,15 @@ Automate repetitive tasks for grading submissions in Canvas
           $ atom ~/.virtualenvs/<venv>/bin/activate
         ```
 
+        - if not using virtualenv wrapper:
+        ```
+          $ sublime <venv>/bin/activate
+        ```
+        or
+        ```
+          $ atom <venv>/bin/activate
+        ```
+
     - add API_TOKEN and COURSE_ID environment variables to activate
     ```
       EXPORT API_TOKEN=""
@@ -58,12 +69,12 @@ Automate repetitive tasks for grading submissions in Canvas
       $ deactivate
     ```
 
-    - virtualenv wrapper
+    - if using virtualenv wrapper:
     ```
       $ workon <virtual env>
     ```
 
-    - virtualenv
+    - if using virtualenv:
     ```
       $ source bin/activate
     ```

@@ -2,7 +2,7 @@
 Automate repetitive tasks for grading submissions in Canvas
 
 
-[test](#Setup)
+[test](#user-content-setup)
 
 # Setup:
 - ##### clone repo

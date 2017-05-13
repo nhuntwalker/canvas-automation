@@ -1,7 +1,7 @@
 # canvas-automation
 Automate repetitive tasks for grading submissions in Canvas
 
-### Quicklinks
+## Quicklinks
 [clone repository](#user-content-clone-repository)  
 [create virtual environment](#user-content-create-virtual-environment)  
 [acquire API key from canvas](#user-content-acquire-api-key-from-canvas)   

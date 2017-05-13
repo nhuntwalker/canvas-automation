@@ -2,11 +2,12 @@
 Automate repetitive tasks for grading submissions in Canvas
 
 
-[test](#user-content-setup)
+[clone repository](#user-content-clone-repository)  
+[create virtual environment](#user-content-create-virtual-environment)  
 [test2](#user-content-re-activate-virtual-environment)
 
 # Setup:
-- ##### clone repo
+- ##### clone repository
 ```
   git clone https://github.com/WillWeatherford/canvas-automation.git
 ```
@@ -70,15 +71,17 @@ Automate repetitive tasks for grading submissions in Canvas
       $ deactivate
     ```
 
-    - if using virtualenv wrapper:
-    ```
-      $ workon <virtual env>
-    ```
+    - activate environment:
 
-    - if using virtualenv:
-    ```
-      $ source bin/activate
-    ```
+      - if using virtualenv wrapper:
+      ```
+        $ workon <virtual env>
+      ```
+
+      - if using virtualenv:
+      ```
+        $ source bin/activate
+      ```
 
 
 - #### run auto_canvas

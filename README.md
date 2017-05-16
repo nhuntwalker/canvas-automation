@@ -10,13 +10,13 @@ Automate repetitive tasks for grading submissions in Canvas
 [run auto_canvas](#user-content-run-auto_canvas)  
 
 # Setup:
-- ##### clone repository
+- #### clone repository
 ```
   git clone https://github.com/WillWeatherford/canvas-automation.git
 ```
 
 
-- ##### create virtual environment
+- #### create virtual environment
     - install [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) and [virtualenv wrapper](http://docs.python-guide.org/en/latest/dev/virtualenvs/#virtualenvwrapper-ref) if needed
     - virtualenv wrapper ()
         - mkvirtualenv <venv>
@@ -29,6 +29,11 @@ Automate repetitive tasks for grading submissions in Canvas
         ```
           $ python -m virtualenviron grading_401f3
         ```
+
+- #### install requests library
+  ```
+  pip install requests
+  ```
 
 
 - #### acquire API key from canvas

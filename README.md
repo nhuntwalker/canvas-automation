@@ -4,6 +4,7 @@ Automate repetitive tasks for grading submissions in Canvas
 ## Quicklinks
 [clone repository](#user-content-clone-repository)  
 [create virtual environment](#user-content-create-virtual-environment)  
+[install requests library](#user-content-install-requests-library)  
 [acquire API key from canvas](#user-content-acquire-api-key-from-canvas)   
 [add "API_TOKEN" and "COURSE_ID" to virtual](#user-content-add-api_token-and-course_id-to-virtual-environment-activate-script)  
 [re-activate virtual environment](#user-content-re-activate-virtual-environment)  

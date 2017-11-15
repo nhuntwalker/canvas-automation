@@ -39,13 +39,27 @@ def _edges(graph):
     return chain(*(zip(repeat(k), v) for k, v in graph.items()))
 
 
-def _depth_first(graph, start):
-    """Proper DFS algorithm for testing against."""
+def _depth_first_right(graph, start):
+    """Proper DFS algorithm for testing against starting to the right."""
     output = []
     found = set()
     stack = [start]
     while stack:
         node = stack.pop()
+        if node not in found:
+            found.add(node)
+            output.append(node)
+            stack.extend(graph[node])
+    return output
+
+
+def _depth_first_left(graph, start):
+    """Proper DFS algorithm for testing against starting to the left."""
+    output = []
+    found = set()
+    stack = [start]
+    while stack:
+        node = stack.pop(0)
         if node not in found:
             found.add(node)
             output.append(node)
@@ -70,7 +84,7 @@ def _breadth_first(graph, start):
 
 GraphFixture = namedtuple(
     'GraphFixture',
-    ('instance', 'graph_dict', 'start', 'dfs', 'bfs', )
+    ('instance', 'graph_dict', 'start', 'dfsr', 'dfsl', 'bfs', )
 )
 
 
@@ -92,16 +106,17 @@ def new_graph(request):
     for edge in _edges(graph_dict):
         instance.add_edge(*edge)
 
-    dfs = _depth_first(graph_dict, start)
+    dfsr = _depth_first_right(graph_dict, start)
+    dfsl = _depth_first_left(graph_dict, start)
     bfs = _breadth_first(graph_dict, start)
 
-    return GraphFixture(instance, graph_dict, start, dfs, bfs)
+    return GraphFixture(instance, graph_dict, start, dfsr, dfsl, bfs)
 
 
 def test_same_cases_dfs(new_graph):
     """Test that simple cases have the correct DFS."""
     result = new_graph.instance.depth_first_traversal(new_graph.start)
-    assert result == new_graph.dfs
+    assert result == new_graph.dfsr or new_graph.dfsl
 
 
 def test_same_cases_bfs(new_graph):

@@ -76,7 +76,7 @@ def test_has_method(method):
     assert hasattr(ClassDef(), method)
 
 
-@pytest.mark.parametrize('val', [1, False, True, None, Exception])
+@pytest.mark.parametrize('val', [1, False, True, Exception])
 def test_init_error(val):
     """Test that heap throws value error when initialized with non iterable."""
     with pytest.raises(TypeError):

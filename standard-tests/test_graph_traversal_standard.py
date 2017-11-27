@@ -116,7 +116,7 @@ def new_graph(request):
 def test_same_cases_dfs(new_graph):
     """Test that simple cases have the correct DFS."""
     result = new_graph.instance.depth_first_traversal(new_graph.start)
-    assert result == new_graph.dfsr or new_graph.dfsl
+    assert result == new_graph.dfsr or result == new_graph.dfsl
 
 
 def test_same_cases_bfs(new_graph):

@@ -59,11 +59,11 @@ def _depth_first_left(graph, start):
     found = set()
     stack = [start]
     while stack:
-        node = stack.pop(0)
+        node = stack.pop()
         if node not in found:
             found.add(node)
             output.append(node)
-            stack.extend(graph[node])
+            stack.extend(graph[node][::-1])
     return output
 
 
@@ -116,7 +116,7 @@ def new_graph(request):
 def test_same_cases_dfs(new_graph):
     """Test that simple cases have the correct DFS."""
     result = new_graph.instance.depth_first_traversal(new_graph.start)
-    assert result == new_graph.dfsr or result == new_graph.dfsl
+    assert result in [new_graph.dfsr, new_graph.dfsl]
 
 
 def test_same_cases_bfs(new_graph):

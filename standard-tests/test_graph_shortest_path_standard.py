@@ -13,6 +13,7 @@ from heapq import heappop, heappush
 from itertools import count, chain, permutations
 from collections import namedtuple
 
+# apply students names
 DIJK_NAME = 'shortest_path_dijkstras'
 ALG2_NAME = 'bellman'
 ALG_NAMES = (
@@ -104,8 +105,7 @@ def dijkstra_traversal(graph, start, end):
 
 def neighbors_with_weights(graph, node):
     """Need to implement."""
-    neighbors = graph.gnodes[node]
-    return neighbors.items()
+    return graph.neighbors(node)
 
 
 def _convert_path(path):

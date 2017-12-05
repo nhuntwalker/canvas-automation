@@ -3,8 +3,17 @@
 import random
 import string
 import pytest
+from importlib import import_module
 from itertools import product, chain
 from collections import namedtuple
+
+
+MODULENAME = 'stack'
+CLASSNAME = 'Stack'
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
+
 
 REQ_METHODS = [
     'push',
@@ -50,10 +59,9 @@ TEST_CASES = product(TEST_CASES, POP)
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_stack(request):
     """Return a namedtuple containing test information."""
-    from stack import Stack
     sequence, pop = request.param
 
-    instance = Stack()
+    instance = ClassDef()
     for val in sequence:
         instance.push(val)
 
@@ -77,8 +85,7 @@ def new_stack(request):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that queue has all the correct methods."""
-    from stack import Stack
-    assert hasattr(Stack(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_push(new_stack):

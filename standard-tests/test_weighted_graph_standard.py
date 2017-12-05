@@ -16,13 +16,6 @@ CLASSNAME = 'Graph'
 NOTFOUNDERROR = ValueError
 
 module = import_module(MODULENAME)
-
-try:
-    classes = inspect.getmembers(module, predicate=inspect.isclass)
-    CLASSNAME = next(name for name, clas in classes if 'graph' in name.lower())
-except:
-    pass
-
 ClassDef = getattr(module, CLASSNAME)
 
 REQ_METHODS = [

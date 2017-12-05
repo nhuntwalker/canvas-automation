@@ -29,8 +29,8 @@ try:
     methods = inspect.getmembers(ClassDef(), predicate=inspect.ismethod)
     BREADTH_TRAVERSAL = next(name for name, f in methods if 'breadth' in name)
     DEPTH_TRAVERSAL = next(name for name, f in methods if 'depth' in name)
-except:
-    BREADTH_TRAVERSAL = 'breadth_first_traversal'
+except StopIteration:
+    BREADTH_TRAVERSAL = 'breath_first_traversal'
     DEPTH_TRAVERSAL = 'depth_first_traversal'
 
 

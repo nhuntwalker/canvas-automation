@@ -18,7 +18,7 @@ BALANCED = True
 MODULENAME = 'bst'
 CLASSNAME = 'BinaryTree'
 ROOT_ATTR = 'root'
-VAL_ATTR = 'value'
+VAL_ATTR = 'val'
 LEFT_ATTR = 'left'
 RIGHT_ATTR = 'right'
 PARENT_ATTR = 'parent'
@@ -106,14 +106,23 @@ def _unbalanced_balance(sequence):
     return _unbalanced_depth(left) - _unbalanced_depth(right)
 
 
-def _in_order(node):
+def _depth(node):
+    if node is None:
+        return 0
+    return max(_depth(x) for x in (node.left, node.right)) + 1
+
+
+def _in_order(node, return_vals=True):
     """Get expected in-order traversal from a node in a Binary Search Tree."""
     if node is None:
         return []
-    val = getattr(node, VAL_ATTR)
+    if return_vals:
+        val = getattr(node, VAL_ATTR)
+    else:
+        val = node
     left = getattr(node, LEFT_ATTR)
     right = getattr(node, RIGHT_ATTR)
-    return _in_order(left) + [val] + _in_order(right)
+    return _in_order(left, return_vals) + [val] + _in_order(right, return_vals)
 
 
 def _pre_order(node):
@@ -379,7 +388,7 @@ def test_depth_after_delete(new_tree):
 
 def test_balance_after_delete(new_tree):
     """Test that tree balance is correct after deletion of item."""
-    if not BALANCED:
+    if not BALANCED and not new_tree.size:
         pytest.skip()
     new_tree.instance.delete(new_tree.to_delete)
     assert -2 < new_tree.instance.balance() < 2
@@ -409,8 +418,36 @@ def test_balance_after_delete_half(new_tree):
     if not BALANCED or len(new_tree.sequence) < 2:
         pytest.skip()
     sequence = list(new_tree.sequence)
-    for _ in range(new_tree.size // 2):
-        to_delete = random.choice(sequence)
-        sequence.remove(to_delete)
-        new_tree.instance.delete(to_delete)
-    assert -2 < new_tree.instance.balance() < 2
+    to_delete = random.sample(sequence, new_tree.size // 2)
+    for delnode in to_delete:
+        new_tree.instance.delete(delnode)
+        assert -2 < new_tree.instance.balance() < 2
+
+def test_all_subtrees_balanced(new_tree):
+    """Test tree is balanced at every node."""
+    if not BALANCED or len(new_tree.sequence) < 2:
+        pytest.skip()
+
+    # check the balance at every node/subtree
+    for node in _in_order(getattr(new_tree.instance, ROOT_ATTR), return_vals=False):
+        left = _depth(getattr(node, LEFT_ATTR))
+        right = _depth(getattr(node, RIGHT_ATTR))
+        assert -2 < left - right < 2
+
+
+def test_all_subtrees_balances_after_delete_half(new_tree):
+    """Test that tree is balanced after deletion of many items."""
+    if not BALANCED or len(new_tree.sequence) < 2:
+        pytest.skip()
+
+    # delete half the tree
+    sequence = list(new_tree.sequence)
+    to_delete = random.sample(sequence, new_tree.size // 2)
+    for delnode in to_delete:
+        new_tree.instance.delete(delnode)
+
+    # check the balance at every node/subtree
+    for node in _in_order(getattr(new_tree.instance, ROOT_ATTR), return_vals=False):
+        left = _depth(getattr(node, LEFT_ATTR))
+        right = _depth(getattr(node, RIGHT_ATTR))
+        assert -2 < left - right < 2

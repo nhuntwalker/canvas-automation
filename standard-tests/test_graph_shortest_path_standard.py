@@ -150,7 +150,7 @@ INT_TEST_CASES = (random.sample(range(1000),
 STR_TEST_CASES = (random.sample(string.printable,
                   random.randrange(2, 10)) for n in range(10))
 
-TEST_CASES = chain(*(STR_TEST_CASES, INT_TEST_CASES, EDGE_CASES))
+TEST_CASES = chain(STR_TEST_CASES, INT_TEST_CASES, EDGE_CASES)
 
 TEST_CASES = list(chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES)))
 
@@ -220,7 +220,7 @@ def traversable_graph(request):
 
     distance, path = dijkstra_traversal(instance, start, end)
     if distance is None:
-        error = KeyError
+        error = ValueError
     else:
         error = None
 

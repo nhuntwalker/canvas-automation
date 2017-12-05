@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import random
 import string
 import pytest
-import inspect
 from hashlib import md5
 from importlib import import_module
 from itertools import product, chain, permutations

@@ -14,9 +14,9 @@ from importlib import import_module
 from itertools import count, chain, permutations
 from collections import namedtuple
 
+
 MODULENAME = 'graph'
 CLASSNAME = 'Graph'
-
 DIJK_NAME = 'dijkstra'
 ALG2_NAME = 'bellman'
 NOTFOUNDERROR = ValueError
@@ -112,7 +112,7 @@ def dijkstra_traversal(graph, start, end):
 
 
 def neighbors_with_weights(graph, node):
-    """This assumes their neighbors method includes the weights."""
+    """If neighbors is a dict of {edges:weights}, convert to tuples."""
     neighbors = graph.neighbors(node)
     if isinstance(neighbors, dict):
         neighbors = neighbors.items()

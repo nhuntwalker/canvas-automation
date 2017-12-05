@@ -14,9 +14,29 @@ from inspect import isgenerator
 from cases import TEST_CASES, MIN_STR, MAX_STR, MIN_INT, MAX_INT
 
 
-BALANCED = True
+"""
+Match MODULENAME and CLASSNAME to student.
+
+Comment in lines as appropriate for steps following inital.
+All previous test should continue to pass with new steps.
+
+Traversals:
+    -REQ_METHODS.extend
+    -Traversal tests
+
+Deletion:
+    -delete in REQ_METHODS
+    -depth and balance methods in BinaryTreeFixture
+    -tests under deletion header
+
+Balancing:
+    -Set BALANCED = True
+"""
+
+
+BALANCED = False
 MODULENAME = 'bst'
-CLASSNAME = 'BinaryTree'
+CLASSNAME = 'BinarySearchTree'
 ROOT_ATTR = 'root'
 VAL_ATTR = 'val'
 LEFT_ATTR = 'left'
@@ -33,7 +53,7 @@ REQ_METHODS = [
     'size',
     'depth',
     'balance',
-    'delete',
+    # 'delete',
 ]
 
 TRAVERSAL_METHODS = [
@@ -43,7 +63,7 @@ TRAVERSAL_METHODS = [
     'breadth_first',
 ]
 
-REQ_METHODS.extend(TRAVERSAL_METHODS)
+# REQ_METHODS.extend(TRAVERSAL_METHODS)
 
 BinaryTreeFixture = namedtuple(
     'BinaryTreeFixture', (
@@ -87,6 +107,14 @@ def _current_less_more(sequence):
     less = [i for i in sequence if i < current]
     more = [i for i in sequence if i > current]
     return current, less, more
+
+
+def _unbalanced_depth_root(sequence):
+    """Get the depth and balance from a random sequence."""
+    if len(sequence) < 2:
+        return 0
+    current, less, more = _current_less_more(sequence)
+    return max(_unbalanced_depth(less), _unbalanced_depth(more))
 
 
 def _unbalanced_depth(sequence):
@@ -190,7 +218,7 @@ def new_tree(request):
             depth = 0
         balance = 0
     else:
-        depth = _unbalanced_depth(sequence)
+        depth = _unbalanced_depth_root(sequence)
         balance = _unbalanced_balance(sequence)
 
     if not sequence or isinstance(sequence[0], int):

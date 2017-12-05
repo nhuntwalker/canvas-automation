@@ -114,11 +114,9 @@ def _depth_first_left(graph, start):
     return output
 
 
-def _depth_first_step(graph, start, found=None):
+def _depth_first_step(graph, start, visited):
     """Proper DFS algorithm for testing against starting to the right."""
-    if found is None:
-        found = []
-    return [x for x in graph[start] if x not in found]
+    return set(x for x in graph[start] if x not in visited)
 
 
 def _breadth_first_right(graph, start):
@@ -206,16 +204,18 @@ def test_valid_dfs(new_graph):
         valid DFTs = [a, b, c, d], [a, d, c, b], [a, c, b, d] ...
     """
     result = getattr(new_graph.instance, DEPTH_TRAVERSAL)(new_graph.start)
-    stack = [[new_graph.start]]
-    for i, node in enumerate(result):
+    stack, visited = [{new_graph.start}], set()
+    for node in result:
         assert node in stack[-1]
-        valid_next_nodes = _depth_first_step(new_graph.graph_dict, node, result[:i+1])
+        visited.add(node)
+        valid_next_nodes = _depth_first_step(new_graph.graph_dict, node, visited)
         stack.append(valid_next_nodes)
         for step in stack:
             if node in step:
                 step.remove(node)
-        while not stack[-1] and len(stack) > 1:
+        while stack and not stack[-1]:
             stack.pop()
+    assert len(stack) == 0
 
 
 def test_valid_bft(new_graph):
@@ -227,16 +227,15 @@ def test_valid_bft(new_graph):
         valid BFTs = [a, b, c, d], [a, d, c, b], [a, c, b, d] ...
     """
     result = getattr(new_graph.instance, BREADTH_TRAVERSAL)(new_graph.start)
-    queue = [[new_graph.start]]
-    found = {new_graph.start}
-    i = 0
-    while queue:
-        assert set(queue[0]) == set(result[i: i + len(queue[0])])
-        first = result[i]
-        queue.append([x for x in new_graph.graph_dict[first] if x not in found])
-        found.update(new_graph.graph_dict[first])
-        queue[0].remove(first)
-        i += 1
+    queue = [{new_graph.start}]
+    visited = {new_graph.start}
+    for i, node in enumerate(result):
+        assert set(result[i: i + len(queue[0])]) == set(queue[0])
+        unvisited_neighbors = set(new_graph.graph_dict[node]) - visited
+        if unvisited_neighbors:
+            queue.append(unvisited_neighbors)
+            visited.update(unvisited_neighbors)
+        queue[0].remove(node)
         while queue and not queue[0]:
             queue.pop(0)
-
+    assert len(queue) == 0

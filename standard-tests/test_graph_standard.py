@@ -8,6 +8,12 @@ import pytest
 from itertools import chain, permutations
 from collections import namedtuple
 
+MODULENAME = 'graph'
+CLASSNAME = 'Graph'
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
+
 REQ_METHODS = [
     'nodes',
     'edges',
@@ -87,10 +93,9 @@ TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
-    from graph import Graph
     nodes, edges = request.param
 
-    instance = Graph()
+    instance = ClassDef()
     for node in nodes:
         instance.add_node(node)
 
@@ -123,7 +128,7 @@ def new_graph(request):
 def test_has_method(method):
     """Test that graph has all the correct methods."""
     from graph import Graph
-    assert hasattr(Graph(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_nodes_unique(new_graph):

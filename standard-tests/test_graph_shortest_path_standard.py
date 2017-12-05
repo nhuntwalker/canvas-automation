@@ -10,12 +10,20 @@ import random
 import string
 import pytest
 from heapq import heappop, heappush
+from importlib import import_module
 from itertools import count, chain, permutations
 from collections import namedtuple
 
-# apply students names
-DIJK_NAME = 'shortest_path_dijkstras'
+
+MODULENAME = 'graph'
+CLASSNAME = 'Graph'
+DIJK_NAME = 'dijkstra'
 ALG2_NAME = 'bellman'
+NOTFOUNDERROR = ValueError
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
+
 ALG_NAMES = (
     DIJK_NAME,
     ALG2_NAME,
@@ -104,8 +112,11 @@ def dijkstra_traversal(graph, start, end):
 
 
 def neighbors_with_weights(graph, node):
-    """Need to implement."""
-    return graph.neighbors(node)
+    """If neighbors is a dict of {edges:weights}, convert to tuples."""
+    neighbors = graph.neighbors(node)
+    if isinstance(neighbors, dict):
+        neighbors = neighbors.items()
+    return neighbors
 
 
 def _convert_path(path):
@@ -139,7 +150,7 @@ INT_TEST_CASES = (random.sample(range(1000),
 STR_TEST_CASES = (random.sample(string.printable,
                   random.randrange(2, 10)) for n in range(10))
 
-TEST_CASES = chain(EDGE_CASES, INT_TEST_CASES, STR_TEST_CASES)
+TEST_CASES = chain(STR_TEST_CASES, INT_TEST_CASES, EDGE_CASES)
 
 TEST_CASES = list(chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES)))
 
@@ -148,18 +159,15 @@ TEST_CASES = list(chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES)
 
 # TEST_CASES = product(TEST_CASES, POP)
 
-NOTFOUNDERROR = ValueError
-
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
-    from graph import Graph
     nodes, edges = request.param
 
     weighted_edges = set(e + (random.randrange(-999, 1000), ) for e in edges)
 
-    instance = Graph()
+    instance = ClassDef()
     for node in nodes:
         instance.add_node(node)
 
@@ -199,12 +207,11 @@ TRAV_TEST_CASES = (
 @pytest.fixture(params=TRAV_TEST_CASES)
 def traversable_graph(request):
     """Fixture for testing shortest path between nodes in graph."""
-    from graph import Graph
     nodes, edges, start, end = request.param
 
     weighted_edges = set(e + (random.randrange(1000), ) for e in edges)
 
-    instance = Graph()
+    instance = ClassDef()
     for node in nodes:
         instance.add_node(node)
 
@@ -237,8 +244,7 @@ def test_dijkstra_valid(method_name, traversable_graph):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that graph has all the correct methods."""
-    from graph import Graph
-    assert hasattr(Graph(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_nodes_unique(new_graph):

@@ -1,8 +1,11 @@
 """Test depth first and breadth first traversal in Graph."""
 from __future__ import unicode_literals
 import pytest
-from itertools import repeat, chain
-from collections import deque, namedtuple
+import random
+import inspect
+from importlib import import_module
+from itertools import repeat, chain, permutations
+from collections import deque, namedtuple, defaultdict
 # from test_graph_standard import TEST_CASES
 
 # Same for breadth and depth
@@ -16,17 +19,61 @@ from collections import deque, namedtuple
 #   5-node diamond
 
 
-EMPTY = {}
-ONE =   {'a': []}
-TWO =   {'a': ['b'],
-         'b': ['a']}
-THREE = {'a': ['b'],
-         'b': ['c'],
-         'c': ['a']}
-FOUR =  {'a': ['b', 'c'],
-         'b': ['d'],
-         'c': ['d'],
-         'd': []}
+MODULENAME = 'graph'
+CLASSNAME = 'Graph'
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
+
+try:
+    methods = inspect.getmembers(ClassDef(), predicate=inspect.ismethod)
+    BREADTH_TRAVERSAL = next(name for name, f in methods if 'breadth' in name)
+    DEPTH_TRAVERSAL = next(name for name, f in methods if 'depth' in name)
+except:
+    BREADTH_TRAVERSAL = 'breadth_first_traversal'
+    DEPTH_TRAVERSAL = 'depth_first_traversal'
+
+
+TEST_GRAPHS = [
+    {},
+    {'a': []},
+    {'a': ['b'],
+     'b': ['a']},
+    {'a': ['b'],
+     'b': ['c'],
+     'c': ['a']},
+    {'a': ['b', 'c', 'd'],
+     'b': ['d'],
+     'c': [],
+     'd': ['b']},
+    {'a': ['b', 'c'],
+     'b': ['d'],
+     'c': ['d'],
+     'd': []},
+    {'a': ['b', 'c', 'd'],
+     'b': ['e'],
+     'c': ['d', 'e'],
+     'e': ['d'],
+     'd': []},
+    {'a': ['b', 'c', 'd'],
+     'b': ['e', 'd'],
+     'c': ['d', 'e'],
+     'e': ['d'],
+     'd': []},
+]
+
+
+def make_graph_dict(nodes, numedges):
+    graph = defaultdict(list)
+    combos = list(permutations(nodes, 2))
+    numedges = min(len(combos), numedges)
+    combos = random.sample(combos, numedges)
+    for a, b in combos:
+        graph[a].append(b)
+    return graph
+
+
+TEST_GRAPHS += [make_graph_dict('abcdefghijkl', 3*n) for n in range(30)]
 
 
 def _nodes(graph):
@@ -59,15 +106,22 @@ def _depth_first_left(graph, start):
     found = set()
     stack = [start]
     while stack:
-        node = stack.pop(0)
+        node = stack.pop()
         if node not in found:
             found.add(node)
             output.append(node)
-            stack.extend(graph[node])
+            stack.extend(graph[node][::-1])
     return output
 
 
-def _breadth_first(graph, start):
+def _depth_first_step(graph, start, found=None):
+    """Proper DFS algorithm for testing against starting to the right."""
+    if found is None:
+        found = []
+    return [x for x in graph[start] if x not in found]
+
+
+def _breadth_first_right(graph, start):
     """Proper BFS algorithm for testing against."""
     output = []
     found = set()
@@ -82,15 +136,30 @@ def _breadth_first(graph, start):
     return output
 
 
+def _breadth_first_left(graph, start):
+    """Proper BFS algorithm for testing against."""
+    output = []
+    found = set()
+    queue = deque([start])
+    while queue:
+        node = queue.pop()
+        if node not in found:
+            found.add(node)
+            output.append(node)
+            for nei in reversed(graph[node]):
+                queue.appendleft(nei)
+    return output
+
+
 GraphFixture = namedtuple(
     'GraphFixture',
-    ('instance', 'graph_dict', 'start', 'dfsr', 'dfsl', 'bfs', )
+    ('instance', 'graph_dict', 'start', 'dfsr', 'dfsl', 'bfsr', 'bfsl')
 )
 
 
 GRAPH_CASES = (
     (graph_dict, key)
-    for graph_dict in (ONE, TWO, THREE, FOUR)
+    for graph_dict in TEST_GRAPHS
     for key in graph_dict.keys()
 )
 
@@ -98,9 +167,8 @@ GRAPH_CASES = (
 @pytest.fixture(params=GRAPH_CASES)
 def new_graph(request):
     """Graph fixture with expected depth-first breadth-first results."""
-    from graph import Graph
     graph_dict, start = request.param[:2]
-    instance = Graph()
+    instance = ClassDef()
     for node in _nodes(graph_dict):
         instance.add_node(node)
     for edge in _edges(graph_dict):
@@ -108,18 +176,67 @@ def new_graph(request):
 
     dfsr = _depth_first_right(graph_dict, start)
     dfsl = _depth_first_left(graph_dict, start)
-    bfs = _breadth_first(graph_dict, start)
+    bfsr = _breadth_first_right(graph_dict, start)
+    bfsl = _breadth_first_left(graph_dict, start)
 
-    return GraphFixture(instance, graph_dict, start, dfsr, dfsl, bfs)
+    return GraphFixture(instance, graph_dict, start, dfsr, dfsl, bfsr, bfsl)
 
 
 def test_same_cases_dfs(new_graph):
     """Test that simple cases have the correct DFS."""
-    result = new_graph.instance.depth_first_traversal(new_graph.start)
-    assert result == new_graph.dfsr or new_graph.dfsl
+    result = getattr(new_graph.instance, DEPTH_TRAVERSAL)(new_graph.start)
+    assert result == new_graph.dfsr or result == new_graph.dfsl
 
 
 def test_same_cases_bfs(new_graph):
     """Test that simple cases have the correct BFS."""
-    result = new_graph.instance.breadth_first_traversal(new_graph.start)
-    assert result == new_graph.bfs
+    result = getattr(new_graph.instance, BREADTH_TRAVERSAL)(new_graph.start)
+    assert result == new_graph.bfsr or result == new_graph.bfsl
+
+# If they've implemented their graph using sets, the above two tests might fail
+# even though their traversals could technically be valid. The two tests below
+# should work for any implementation, though they are harder to debug.
+
+def test_valid_dfs(new_graph):
+    """
+    Test depth traversal for order-agnostic implementations
+
+    E.G.
+        graph = {a: [b, c, d]}
+        valid DFTs = [a, b, c, d], [a, d, c, b], [a, c, b, d] ...
+    """
+    result = getattr(new_graph.instance, DEPTH_TRAVERSAL)(new_graph.start)
+    stack = [[new_graph.start]]
+    for i, node in enumerate(result):
+        assert node in stack[-1]
+        valid_next_nodes = _depth_first_step(new_graph.graph_dict, node, result[:i+1])
+        stack.append(valid_next_nodes)
+        for step in stack:
+            if node in step:
+                step.remove(node)
+        while not stack[-1] and len(stack) > 1:
+            stack.pop()
+
+
+def test_valid_bft(new_graph):
+    """
+    Test breadth traversal for order-agnostic implementations
+
+    E.G.
+        graph = {a: [b, c, d]}
+        valid BFTs = [a, b, c, d], [a, d, c, b], [a, c, b, d] ...
+    """
+    result = getattr(new_graph.instance, BREADTH_TRAVERSAL)(new_graph.start)
+    queue = [[new_graph.start]]
+    found = {new_graph.start}
+    i = 0
+    while queue:
+        assert set(queue[0]) == set(result[i: i + len(queue[0])])
+        first = result[i]
+        queue.append([x for x in new_graph.graph_dict[first] if x not in found])
+        found.update(new_graph.graph_dict[first])
+        queue[0].remove(first)
+        i += 1
+        while queue and not queue[0]:
+            queue.pop(0)
+

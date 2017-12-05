@@ -134,14 +134,23 @@ def _unbalanced_balance(sequence):
     return _unbalanced_depth(left) - _unbalanced_depth(right)
 
 
-def _in_order(node):
+def _depth(node):
+    if node is None:
+        return 0
+    return max(_depth(x) for x in (node.left, node.right)) + 1
+
+
+def _in_order(node, return_vals=True):
     """Get expected in-order traversal from a node in a Binary Search Tree."""
     if node is None:
         return []
-    val = getattr(node, VAL_ATTR)
+    if return_vals:
+        val = getattr(node, VAL_ATTR)
+    else:
+        val = node
     left = getattr(node, LEFT_ATTR)
     right = getattr(node, RIGHT_ATTR)
-    return _in_order(left) + [val] + _in_order(right)
+    return _in_order(left, return_vals) + [val] + _in_order(right, return_vals)
 
 
 def _pre_order(node):
@@ -335,110 +344,138 @@ def test_no_duplicates(new_tree):
 # Traversal tests
 
 
-# @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-# def test_traversal_generator(method_name):
-#     """Test that all traversal methods always return generators."""
-#     method = getattr(ClassDef(), method_name)
-#     assert isgenerator(method())
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_traversal_generator(method_name):
+    """Test that all traversal methods always return generators."""
+    method = getattr(ClassDef(), method_name)
+    assert isgenerator(method())
 
 
-# @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-# def test_traversals(method_name, new_tree):
-#     """Test that in-order traversal generates values in sorted order."""
-#     canon = globals()['_' + method_name]
-#     method = getattr(new_tree.instance, method_name)
-#     root = getattr(new_tree.instance, ROOT_ATTR)
-#     assert list(method()) == canon(root)
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_traversals(method_name, new_tree):
+    """Test that in-order traversal generates values in sorted order."""
+    canon = globals()['_' + method_name]
+    method = getattr(new_tree.instance, method_name)
+    root = getattr(new_tree.instance, ROOT_ATTR)
+    assert list(method()) == canon(root)
 
 
 # Deletion tests
 
 
-# def test_delete_not_in_tree(new_tree):
-#     """Test that trying to delete something not in the tree does nothing."""
-#     new_tree.instance.delete(new_tree.to_insert)
-#     size_check = new_tree.instance.size() == new_tree.size
-#     if BALANCED:
-#         depth_check = abs(new_tree.instance.depth() - new_tree.depth) < 2
-#     else:
-#         depth_check = new_tree.instance.depth() == new_tree.depth
-#     assert all([size_check, depth_check])
+def test_delete_not_in_tree(new_tree):
+    """Test that trying to delete something not in the tree does nothing."""
+    new_tree.instance.delete(new_tree.to_insert)
+    size_check = new_tree.instance.size() == new_tree.size
+    if BALANCED:
+        depth_check = abs(new_tree.instance.depth() - new_tree.depth) < 2
+    else:
+        depth_check = new_tree.instance.depth() == new_tree.depth
+    assert all([size_check, depth_check])
 
 
-# def test_invariant_after_delete(new_tree):
-#     """Test that tree still conforms to invariant after deletion."""
-#     new_tree.instance.delete(new_tree.to_delete)
-#     assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
+def test_invariant_after_delete(new_tree):
+    """Test that tree still conforms to invariant after deletion."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
 
 
-# def test_deleted_not_contained(new_tree):
-#     """Test that deleted item is not in the tree after deletion."""
-#     new_tree.instance.delete(new_tree.to_delete)
-#     assert not new_tree.instance.contains(new_tree.to_delete)
+def test_deleted_not_contained(new_tree):
+    """Test that deleted item is not in the tree after deletion."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert not new_tree.instance.contains(new_tree.to_delete)
 
 
-# def test_contains_after_delete(new_tree):
-#     """Test that all other items are still contained by tree after deletion."""
-#     new_tree.instance.delete(new_tree.to_delete)
-#     assert all([new_tree.instance.contains(item)
-#                 for item in new_tree.contains_after_delete])
+def test_contains_after_delete(new_tree):
+    """Test that all other items are still contained by tree after deletion."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert all([new_tree.instance.contains(item)
+                for item in new_tree.contains_after_delete])
 
 
-# def test_size_after_delete(new_tree):
-#     """Test that tree size is correct after deletion of item."""
-#     new_tree.instance.delete(new_tree.to_delete)
-#     assert new_tree.instance.size() == new_tree.size_after_delete
+def test_size_after_delete(new_tree):
+    """Test that tree size is correct after deletion of item."""
+    new_tree.instance.delete(new_tree.to_delete)
+    assert new_tree.instance.size() == new_tree.size_after_delete
 
 
-# def test_depth_after_delete(new_tree):
-#     """Test that tree size is correct after deletion of item."""
-#     if not BALANCED:
-#         pytest.skip()
-#     new_tree.instance.delete(new_tree.to_delete)
-#     try:
-#         depth = math.floor(math.log(new_tree.size_after_delete, 2)) + 1
-#     except ValueError:
-#         depth = 0
-#     if BALANCED:
-#         assert abs(new_tree.instance.depth() - depth) < 2
-#     else:
-#         assert new_tree.instance.depth() == depth
+def test_depth_after_delete(new_tree):
+    """Test that tree size is correct after deletion of item."""
+    if not BALANCED:
+        pytest.skip()
+    new_tree.instance.delete(new_tree.to_delete)
+    try:
+        depth = math.floor(math.log(new_tree.size_after_delete, 2)) + 1
+    except ValueError:
+        depth = 0
+    if BALANCED:
+        assert abs(new_tree.instance.depth() - depth) < 2
+    else:
+        assert new_tree.instance.depth() == depth
 
 
-# def test_balance_after_delete(new_tree):
-#     """Test that tree balance is correct after deletion of item."""
-#     if not BALANCED:
-#         pytest.skip()
-#     new_tree.instance.delete(new_tree.to_delete)
-#     assert -2 < new_tree.instance.balance() < 2
+def test_balance_after_delete(new_tree):
+    """Test that tree balance is correct after deletion of item."""
+    if not BALANCED and not new_tree.size:
+        pytest.skip()
+    new_tree.instance.delete(new_tree.to_delete)
+    assert -2 < new_tree.instance.balance() < 2
 
 
-# def test_depth_after_delete_half(new_tree):
-#     """Test that tree depth is correct after deletion of many items."""
-#     if not BALANCED or len(new_tree.sequence) < 2:
-#         pytest.skip()
-#     sequence = list(new_tree.sequence)
-#     for _ in range(new_tree.size // 2):
-#         to_delete = random.choice(sequence)
-#         sequence.remove(to_delete)
-#         new_tree.instance.delete(to_delete)
-#     try:
-#         depth = math.floor(math.log(new_tree.size // 2, 2)) + 1
-#     except ValueError:
-#         depth = 0
-#     if BALANCED:
-#         assert abs(new_tree.instance.depth() - depth) < 2
-#     else:
-#         assert new_tree.instance.depth() == depth
+def test_depth_after_delete_half(new_tree):
+    """Test that tree depth is correct after deletion of many items."""
+    if not BALANCED or len(new_tree.sequence) < 2:
+        pytest.skip()
+    sequence = list(new_tree.sequence)
+    for _ in range(new_tree.size // 2):
+        to_delete = random.choice(sequence)
+        sequence.remove(to_delete)
+        new_tree.instance.delete(to_delete)
+    try:
+        depth = math.floor(math.log(new_tree.size // 2, 2)) + 1
+    except ValueError:
+        depth = 0
+    if BALANCED:
+        assert abs(new_tree.instance.depth() - depth) < 2
+    else:
+        assert new_tree.instance.depth() == depth
 
 
-# def test_balance_after_delete_half(new_tree):
-#     """Test that tree balance is good after deletion of many items."""
-#     if not BALANCED or len(new_tree.sequence) < 2:
-#         pytest.skip()
-#     sequence = list(new_tree.sequence)
-#     for _ in range(new_tree.size // 2):
-#         to_delete = random.choice(sequence)
-#         sequence.remove(to_delete)
-#         new_tree.instance.delete(to_delete)
-#     assert -2 < new_tree.instance.balance() < 2
+def test_balance_after_delete_half(new_tree):
+    """Test that tree balance is good after deletion of many items."""
+    if not BALANCED or len(new_tree.sequence) < 2:
+        pytest.skip()
+    sequence = list(new_tree.sequence)
+    to_delete = random.sample(sequence, new_tree.size // 2)
+    for delnode in to_delete:
+        new_tree.instance.delete(delnode)
+        assert -2 < new_tree.instance.balance() < 2
+
+def test_all_subtrees_balanced(new_tree):
+    """Test tree is balanced at every node."""
+    if not BALANCED or len(new_tree.sequence) < 2:
+        pytest.skip()
+
+    # check the balance at every node/subtree
+    for node in _in_order(getattr(new_tree.instance, ROOT_ATTR), return_vals=False):
+        left = _depth(getattr(node, LEFT_ATTR))
+        right = _depth(getattr(node, RIGHT_ATTR))
+        assert -2 < left - right < 2
+
+
+def test_all_subtrees_balances_after_delete_half(new_tree):
+    """Test that tree is balanced after deletion of many items."""
+    if not BALANCED or len(new_tree.sequence) < 2:
+        pytest.skip()
+
+    # delete half the tree
+    sequence = list(new_tree.sequence)
+    to_delete = random.sample(sequence, new_tree.size // 2)
+    for delnode in to_delete:
+        new_tree.instance.delete(delnode)
+
+    # check the balance at every node/subtree
+    for node in _in_order(getattr(new_tree.instance, ROOT_ATTR), return_vals=False):
+        left = _depth(getattr(node, LEFT_ATTR))
+        right = _depth(getattr(node, RIGHT_ATTR))
+        assert -2 < left - right < 2

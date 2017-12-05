@@ -6,8 +6,16 @@ import random
 import string
 import pytest
 from hashlib import md5
+from importlib import import_module
 from itertools import product, chain, permutations
 from collections import namedtuple
+
+MODULENAME = 'graph'
+CLASSNAME = 'Graph'
+NOTFOUNDERROR = ValueError
+
+module = import_module(MODULENAME)
+ClassDef = getattr(module, CLASSNAME)
 
 REQ_METHODS = [
     'nodes',
@@ -85,19 +93,16 @@ TEST_CASES = chain(*(_make_node_edge_combos(nodes) for nodes in TEST_CASES))
 
 # TEST_CASES = product(TEST_CASES, POP)
 
-NOTFOUNDERROR = ValueError
-
 
 @pytest.fixture(scope='function', params=TEST_CASES)
 def new_graph(request):
     """Return a new empty instance of MyQueue."""
-    from graph import Graph
     # nodes, edges = None, None
     nodes, edges = request.param
 
     weighted_edges = set(e + (random.randrange(-999, 1000), ) for e in edges)
 
-    instance = Graph()
+    instance = ClassDef()
     for node in nodes:
         instance.add_node(node)
 
@@ -130,8 +135,7 @@ def new_graph(request):
 @pytest.mark.parametrize('method', REQ_METHODS)
 def test_has_method(method):
     """Test that graph has all the correct methods."""
-    from graph import Graph
-    assert hasattr(Graph(), method)
+    assert hasattr(ClassDef(), method)
 
 
 def test_nodes_unique(new_graph):

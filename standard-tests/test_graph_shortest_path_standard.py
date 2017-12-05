@@ -112,14 +112,10 @@ def dijkstra_traversal(graph, start, end):
 
 
 def neighbors_with_weights(graph, node):
-    """Need to implement."""
+    """This assumes their neighbors method includes the weights."""
     neighbors = graph.neighbors(node)
     if isinstance(neighbors, dict):
         neighbors = neighbors.items()
-    elif len(neighbors):
-        if not isinstance(neighbors[0], (tuple, list, set)):
-            # you will probably have to implement a weight for them, or just alter this.
-            neighbors = [(n, graph.weight(node, n)) for n in neighbors]
     return neighbors
 
 

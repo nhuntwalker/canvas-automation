@@ -371,20 +371,20 @@ def test_no_duplicates(new_tree):
 # # Traversal tests
 
 
-# @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-# def test_traversal_generator(method_name):
-#     """Test that all traversal methods always return generators."""
-#     method = getattr(ClassDef(), method_name)
-#     assert isgenerator(method())
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_traversal_generator(method_name):
+    """Test that all traversal methods always return generators."""
+    method = getattr(ClassDef(), method_name)
+    assert isgenerator(method())
 
 
-# @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-# def test_traversals(method_name, new_tree):
-#     """Test that in-order traversal generates values in sorted order."""
-#     canon = globals()['_' + method_name]
-#     method = getattr(new_tree.instance, method_name)
-#     root = getattr(new_tree.instance, ROOT_ATTR)
-#     assert list(method()) == canon(root)
+@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+def test_traversals(method_name, new_tree):
+    """Test that in-order traversal generates values in sorted order."""
+    canon = globals()['_' + method_name]
+    method = getattr(new_tree.instance, method_name)
+    root = getattr(new_tree.instance, ROOT_ATTR)
+    assert list(method()) == canon(root)
 
 
 # # Deletion tests

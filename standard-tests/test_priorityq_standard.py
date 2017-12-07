@@ -50,7 +50,7 @@ PRIORITIES = [
 ]
 
 # iters of tuples for every combination of priority and input sequence
-TEST_CASES = (zip(t, p) for t, p in product(TEST_CASES, PRIORITIES))
+TEST_CASES = (list(zip(t, p)) for t, p in product(TEST_CASES, PRIORITIES))
 
 POP = list(range(3))
 PEEK = (True, False)

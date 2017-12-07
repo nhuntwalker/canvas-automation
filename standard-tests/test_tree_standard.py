@@ -26,7 +26,6 @@ Traversals:
 
 Deletion:
     -delete in REQ_METHODS
-    -depth and balance methods in BinaryTreeFixture
     -tests under deletion header
 
 Balancing:
@@ -77,9 +76,14 @@ BinaryTreeFixture = namedtuple(
         'to_insert',
         'to_delete',
         'contains_after_delete',
-        # 'depth_after_delete',
-        # 'balance_after_delete',
+        'depth_after_delete',
+        'balance_after_delete',
         'size_after_delete',
+        'to_delete_half',
+        'contains_after_delete_half',
+        'depth_after_delete_half',
+        'balance_after_delete_half',
+        'size_after_delete_half',
     )
 )
 
@@ -125,7 +129,7 @@ def _unbalanced_depth(sequence):
     return max(_unbalanced_depth(less), _unbalanced_depth(more)) + 1
 
 
-def _unbalanced_balance(sequence):
+def _balance(sequence):
     """Get the depth and balance from a random sequence."""
     try:
         root, left, right = _current_less_more(sequence)
@@ -217,10 +221,10 @@ def new_tree(request):
             depth = math.floor(math.log(size, 2)) + 1
         except ValueError:
             depth = 0
-        balance = 0
+        balance = _balance(sequence)
     else:
         depth = _unbalanced_depth_root(sequence)
-        balance = _unbalanced_balance(sequence)
+        balance = _balance(sequence)
 
     if not sequence or isinstance(sequence[0], int):
         left_overbalance = range(MIN_INT, MIN_INT - 100, -1)
@@ -241,8 +245,25 @@ def new_tree(request):
     sequence_after_delete = list(sequence)
     while to_delete in sequence_after_delete:
         sequence_after_delete.remove(to_delete)
-    # depth_after_delete = _unbalanced_depth(sequence_after_delete)
-    # balance_after_delete = _unbalanced_balance(sequence_after_delete)
+    depth_after_delete = _unbalanced_depth(sequence_after_delete)
+    balance_after_delete = _balance(sequence_after_delete)
+
+    contains_after_delete_half = set(sequence)
+    to_delete_half = []
+    sequence_after_delete_half = list(sequence)
+    for _ in range(len(sequence) // 2):
+        item = random.choice(sequence_after_delete_half)
+        sequence_after_delete_half.remove(item)
+        to_delete_half.append(item)
+    try:
+        for i in to_delete_half:
+            contains_after_delete_half.remove(i)
+    except KeyError:
+        pass
+    size_after_delete_half = len(contains_after_delete_half)
+
+    depth_after_delete_half = _unbalanced_depth(sequence_after_delete_half)
+    balance_after_delete_half = _balance(sequence_after_delete_half)
 
     return BinaryTreeFixture(
         instance,
@@ -255,9 +276,14 @@ def new_tree(request):
         to_insert,
         to_delete,
         contains_after_delete,
-        # depth_after_delete,
-        # balance_after_delete,
+        depth_after_delete,
+        balance_after_delete,
         size_after_delete,
+        to_delete_half,
+        contains_after_delete_half,
+        depth_after_delete_half,
+        balance_after_delete_half,
+        size_after_delete_half,
     )
 
 
@@ -388,7 +414,7 @@ def test_no_duplicates(new_tree):
 
 
 # def test_contains_after_delete(new_tree):
-#     """Test that all other items are still contained by tree after deletion."""
+#     """Test contents of the tree after deletion."""
 #     new_tree.instance.delete(new_tree.to_delete)
 #     assert all([new_tree.instance.contains(item)
 #                 for item in new_tree.contains_after_delete])
@@ -402,15 +428,15 @@ def test_no_duplicates(new_tree):
 
 # def test_depth_after_delete(new_tree):
 #     """Test that tree size is correct after deletion of item."""
-#     if not BALANCED:
+#     if not BALANCED and not new_tree.size:
 #         pytest.skip()
 #     new_tree.instance.delete(new_tree.to_delete)
 #     try:
-#         depth = math.floor(math.log(new_tree.size_after_delete, 2)) + 1
+#         depth = int(math.floor(math.log(new_tree.size_after_delete, 2)) + 1)
 #     except ValueError:
 #         depth = 0
 #     if BALANCED:
-#         assert abs(new_tree.instance.depth() - depth) < 2
+#         assert int(abs(new_tree.instance.depth() - depth)) < 2
 #     else:
 #         assert new_tree.instance.depth() == depth
 
@@ -420,20 +446,21 @@ def test_no_duplicates(new_tree):
 #     if not BALANCED and not new_tree.size:
 #         pytest.skip()
 #     new_tree.instance.delete(new_tree.to_delete)
-#     assert -2 < new_tree.instance.balance() < 2
+#     if BALANCED:
+#         assert -2 < new_tree.instance.balance() < 2
+#     else:
+#         assert new_tree.instance.balance() == new_tree.balance_after_delete
 
 
 # def test_depth_after_delete_half(new_tree):
 #     """Test that tree depth is correct after deletion of many items."""
-#     if not BALANCED or len(new_tree.sequence) < 2:
+#     if not BALANCED and len(new_tree.sequence) < 2:
 #         pytest.skip()
-#     sequence = list(new_tree.sequence)
-#     for _ in range(new_tree.size // 2):
-#         to_delete = random.choice(sequence)
-#         sequence.remove(to_delete)
-#         new_tree.instance.delete(to_delete)
+#     for i in new_tree.to_delete_half:
+#         new_tree.instance.delete(i)
 #     try:
-#         depth = math.floor(math.log(new_tree.size // 2, 2)) + 1
+#         depth = math.log(new_tree.size_after_delete_half // 2, 2)
+#         depth = int(math.floor(depth) + 1)
 #     except ValueError:
 #         depth = 0
 #     if BALANCED:
@@ -444,13 +471,15 @@ def test_no_duplicates(new_tree):
 
 # def test_balance_after_delete_half(new_tree):
 #     """Test that tree balance is good after deletion of many items."""
-#     if not BALANCED or len(new_tree.sequence) < 2:
+#     if not BALANCED and not new_tree.size:
 #         pytest.skip()
-#     sequence = list(new_tree.sequence)
-#     to_delete = random.sample(sequence, new_tree.size // 2)
-#     for delnode in to_delete:
-#         new_tree.instance.delete(delnode)
+#     for i in new_tree.to_delete_half:
+#         new_tree.instance.delete(i)
+#     if BALANCED:
 #         assert -2 < new_tree.instance.balance() < 2
+#     else:
+#         balance = new_tree.balance_after_delete_half
+#         assert new_tree.instance.balance() == balance
 
 
 # def test_all_subtrees_balanced(new_tree):
@@ -463,7 +492,7 @@ def test_no_duplicates(new_tree):
 #                           ROOT_ATTR), return_vals=False):
 #         left = _depth(getattr(node, LEFT_ATTR))
 #         right = _depth(getattr(node, RIGHT_ATTR))
-#         assert -2 < left - right < 2
+#         assert -2 < (left - right) < 2
 
 
 # def test_all_subtrees_balances_after_delete_half(new_tree):
@@ -471,15 +500,12 @@ def test_no_duplicates(new_tree):
 #     if not BALANCED or len(new_tree.sequence) < 2:
 #         pytest.skip()
 
-#     # delete half the tree
-#     sequence = list(new_tree.sequence)
-#     to_delete = random.sample(sequence, new_tree.size // 2)
-#     for delnode in to_delete:
-#         new_tree.instance.delete(delnode)
+#     for i in new_tree.to_delete_half:
+#         new_tree.instance.delete(i)
 
 #     # check the balance at every node/subtree
 #     for node in _in_order(getattr(new_tree.instance, ROOT_ATTR),
 #                           return_vals=False):
 #         left = _depth(getattr(node, LEFT_ATTR))
 #         right = _depth(getattr(node, RIGHT_ATTR))
-#         assert -2 < left - right < 2
+#         assert -2 < (left - right) < 2

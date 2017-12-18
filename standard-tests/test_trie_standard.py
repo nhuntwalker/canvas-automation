@@ -24,6 +24,8 @@ REQ_METHODS = [
     'insert',
     'contains',
     'traversal',
+    'remove',
+    'size',
 ]
 
 

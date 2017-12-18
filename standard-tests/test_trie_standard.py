@@ -9,10 +9,12 @@ from importlib import import_module
 from inspect import isgenerator
 
 from cases import STR_EDGE_CASES
+
 MODULENAME = 'trie'
 CLASSNAME = 'Trie'
 ROOT_ATTR = 'root'
 END_CHAR = '$'
+REMOVE_ERROR = ValueError
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -31,6 +33,7 @@ TrieFixture = namedtuple(
         'sequence',
         'contains',
         'to_insert',
+        'to_remove',
         'contain_false_shorter',
         'contain_false_longer',
         'start',
@@ -95,6 +98,7 @@ def new_trie(request):
         instance.insert(item)
 
     to_insert = 'superuniquestring'
+    to_remove = random.choice(sequence)
 
     longest = max(sequence, key=len) if sequence else ''
     contain_false_longer = longest + 'more'
@@ -112,6 +116,7 @@ def new_trie(request):
         sequence,
         contains,
         to_insert,
+        to_remove,
         contain_false_shorter,
         contain_false_longer,
         start,
@@ -144,6 +149,34 @@ def test_insert(new_trie):
     """Check that a new item can be inserted and then contains is true."""
     new_trie.instance.insert(new_trie.to_insert)
     assert new_trie.instance.contains(new_trie.to_insert)
+
+
+def test_remove(new_trie):
+    """Check remove removes item."""
+    new_trie.instance.remove(new_trie.to_remove)
+    assert not new_trie.instance.contains(new_trie.to_remove)
+    for x in new_trie.contains - set([new_trie.to_remove]):
+        assert new_trie.instance.contains(x)
+
+
+def test_remove_error(new_trie):
+    """Check remove throws error when word to delete not in trie."""
+    with pytest.raises(REMOVE_ERROR):
+        new_trie.instance.remove('supercalifuniquestring')
+
+
+def test_size(new_trie):
+    """Check size..."""
+    assert new_trie.instance.size() == len(new_trie.contains)
+
+
+def test_size_after_remove(new_trie):
+    """Check size decreases when delete."""
+    num_remove = random.randint(1, len(new_trie.contains))
+    to_remove = random.sample(new_trie.contains, num_remove)
+    for word in to_remove:
+        new_trie.instance.remove(word)
+    assert new_trie.instance.size() == len(new_trie.contains) - len(to_remove)
 
 
 def test_traversal_generator(new_trie):

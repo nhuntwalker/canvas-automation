@@ -55,6 +55,8 @@ def _make_words():
 
     with open('/usr/share/dict/words', 'r') as words:
         for idx, word in enumerate(words):
+            if idx > 2000:
+                break
             word = word.strip()
             try:
                 word = word.decode('utf-8')
@@ -111,7 +113,7 @@ def new_trie(request):
     if not contain_false_shorter:
         contain_false_shorter = 'superduperuniquestring'
 
-    traverse = set(word for word in sequence if word.startswith(start))
+    traverse = set(''.join(word[len(start):] for word in sequence if word.startswith(start)))
 
     return TrieFixture(
         instance,
@@ -188,17 +190,17 @@ def test_traversal_generator(new_trie):
 
 def test_traversal(new_trie):
     """Check that traversal returns all items contained in the Trie."""
-    result = new_trie.instance.traversal(new_trie.start)
+    result = list(new_trie.instance.traversal(new_trie.start))
     assert set(result) == new_trie.traverse
 
 
 def test_traversal_false_shorter(new_trie):
     """Check traversal doesn't return item similar but shorter."""
-    result = new_trie.instance.traversal(new_trie.start)
+    result = list(new_trie.instance.traversal(new_trie.start))
     assert new_trie.contain_false_shorter not in set(result)
 
 
 def test_traversal_false_longer(new_trie):
     """Check traversal doesn't return item similar but longer."""
-    result = new_trie.instance.traversal(new_trie.start)
+    result = list(new_trie.instance.traversal(new_trie.start))
     assert new_trie.contain_false_longer not in set(result)

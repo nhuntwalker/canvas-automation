@@ -227,12 +227,12 @@ def new_tree(request):
         balance = _balance(sequence)
 
     if not sequence or isinstance(sequence[0], int):
-        left_overbalance = range(MIN_INT, MIN_INT - 100, -1)
-        right_overbalance = range(MAX_INT, MAX_INT + 100)
+        left_overbalance = list(range(MIN_INT, MIN_INT - 100, -1))
+        right_overbalance = list(range(MAX_INT, MAX_INT + 100))
         to_insert = MAX_INT
     else:
-        left_overbalance = (MIN_STR * n for n in range(100, 0, -1))
-        right_overbalance = (MAX_STR * n for n in range(1, 101))
+        left_overbalance = [MIN_STR * n for n in range(100, 0, -1)]
+        right_overbalance = [MAX_STR * n for n in range(1, 101)]
         to_insert = 'superuniquestring'
 
     contains_after_delete = set(sequence)
@@ -348,7 +348,11 @@ def test_left_overbalance(new_tree):
     if BALANCED:
         assert -2 < new_tree.instance.balance() < 2
     else:
-        assert new_tree.instance.balance() > new_tree.balance
+        new_sequence = []
+        for item in new_tree.sequence:
+            new_sequence.append(item)
+        new_sequence += new_tree.left_overbalance
+        assert new_tree.instance.balance() == _balance(new_sequence)
 
 
 def test_right_overbalance(new_tree):
@@ -358,7 +362,11 @@ def test_right_overbalance(new_tree):
     if BALANCED:
         assert -2 < new_tree.instance.balance() < 2
     else:
-        assert new_tree.instance.balance() < new_tree.balance
+        new_sequence = []
+        for item in new_tree.sequence:
+            new_sequence.append(item)
+        new_sequence += new_tree.right_overbalance
+        assert new_tree.instance.balance() == _balance(new_sequence)
 
 
 def test_no_duplicates(new_tree):
@@ -371,20 +379,20 @@ def test_no_duplicates(new_tree):
 # # Traversal tests
 
 
-@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-def test_traversal_generator(method_name):
-    """Test that all traversal methods always return generators."""
-    method = getattr(ClassDef(), method_name)
-    assert isgenerator(method())
+# @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+# def test_traversal_generator(method_name):
+#     """Test that all traversal methods always return generators."""
+#     method = getattr(ClassDef(), method_name)
+#     assert isgenerator(method())
 
 
-@pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
-def test_traversals(method_name, new_tree):
-    """Test that in-order traversal generates values in sorted order."""
-    canon = globals()['_' + method_name]
-    method = getattr(new_tree.instance, method_name)
-    root = getattr(new_tree.instance, ROOT_ATTR)
-    assert list(method()) == canon(root)
+# @pytest.mark.parametrize('method_name', TRAVERSAL_METHODS)
+# def test_traversals(method_name, new_tree):
+#     """Test that in-order traversal generates values in sorted order."""
+#     canon = globals()['_' + method_name]
+#     method = getattr(new_tree.instance, method_name)
+#     root = getattr(new_tree.instance, ROOT_ATTR)
+#     assert list(method()) == canon(root)
 
 
 # # Deletion tests

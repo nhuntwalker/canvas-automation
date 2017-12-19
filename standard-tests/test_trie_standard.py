@@ -9,10 +9,12 @@ from importlib import import_module
 from inspect import isgenerator
 
 from cases import STR_EDGE_CASES
+
 MODULENAME = 'trie'
 CLASSNAME = 'Trie'
 ROOT_ATTR = 'root'
 END_CHAR = '$'
+REMOVE_ERROR = ValueError
 
 module = import_module(MODULENAME)
 ClassDef = getattr(module, CLASSNAME)
@@ -22,6 +24,8 @@ REQ_METHODS = [
     'insert',
     'contains',
     'traversal',
+    'remove',
+    'size',
 ]
 
 
@@ -31,6 +35,7 @@ TrieFixture = namedtuple(
         'sequence',
         'contains',
         'to_insert',
+        'to_remove',
         'contain_false_shorter',
         'contain_false_longer',
         'start',
@@ -50,6 +55,8 @@ def _make_words():
 
     with open('/usr/share/dict/words', 'r') as words:
         for idx, word in enumerate(words):
+            if idx > 2000:
+                break
             word = word.strip()
             try:
                 word = word.decode('utf-8')
@@ -95,6 +102,7 @@ def new_trie(request):
         instance.insert(item)
 
     to_insert = 'superuniquestring'
+    to_remove = random.choice(sequence)
 
     longest = max(sequence, key=len) if sequence else ''
     contain_false_longer = longest + 'more'
@@ -105,13 +113,14 @@ def new_trie(request):
     if not contain_false_shorter:
         contain_false_shorter = 'superduperuniquestring'
 
-    traverse = set(word for word in sequence if word.startswith(start))
+    traverse = set(''.join(word[len(start):] for word in sequence if word.startswith(start)))
 
     return TrieFixture(
         instance,
         sequence,
         contains,
         to_insert,
+        to_remove,
         contain_false_shorter,
         contain_false_longer,
         start,
@@ -146,6 +155,34 @@ def test_insert(new_trie):
     assert new_trie.instance.contains(new_trie.to_insert)
 
 
+def test_remove(new_trie):
+    """Check remove removes item."""
+    new_trie.instance.remove(new_trie.to_remove)
+    assert not new_trie.instance.contains(new_trie.to_remove)
+    for x in new_trie.contains - set([new_trie.to_remove]):
+        assert new_trie.instance.contains(x)
+
+
+def test_remove_error(new_trie):
+    """Check remove throws error when word to delete not in trie."""
+    with pytest.raises(REMOVE_ERROR):
+        new_trie.instance.remove('supercalifuniquestring')
+
+
+def test_size(new_trie):
+    """Check size..."""
+    assert new_trie.instance.size() == len(new_trie.contains)
+
+
+def test_size_after_remove(new_trie):
+    """Check size decreases when delete."""
+    num_remove = random.randint(1, len(new_trie.contains))
+    to_remove = random.sample(new_trie.contains, num_remove)
+    for word in to_remove:
+        new_trie.instance.remove(word)
+    assert new_trie.instance.size() == len(new_trie.contains) - len(to_remove)
+
+
 def test_traversal_generator(new_trie):
     """Test that traversal method returns a generator."""
     assert isgenerator(new_trie.instance.traversal())
@@ -153,17 +190,17 @@ def test_traversal_generator(new_trie):
 
 def test_traversal(new_trie):
     """Check that traversal returns all items contained in the Trie."""
-    result = new_trie.instance.traversal(new_trie.start)
+    result = list(new_trie.instance.traversal(new_trie.start))
     assert set(result) == new_trie.traverse
 
 
 def test_traversal_false_shorter(new_trie):
     """Check traversal doesn't return item similar but shorter."""
-    result = new_trie.instance.traversal(new_trie.start)
+    result = list(new_trie.instance.traversal(new_trie.start))
     assert new_trie.contain_false_shorter not in set(result)
 
 
 def test_traversal_false_longer(new_trie):
     """Check traversal doesn't return item similar but longer."""
-    result = new_trie.instance.traversal(new_trie.start)
+    result = list(new_trie.instance.traversal(new_trie.start))
     assert new_trie.contain_false_longer not in set(result)

@@ -36,9 +36,9 @@ Balancing:
 
 BALANCED = False
 MODULENAME = 'bst'
-CLASSNAME = 'Bst'
+CLASSNAME = 'BinarySearchTree'
 ROOT_ATTR = 'root'
-VAL_ATTR = 'data'
+VAL_ATTR = 'Value'
 LEFT_ATTR = 'left'
 RIGHT_ATTR = 'right'
 PARENT_ATTR = 'parent'
@@ -53,7 +53,7 @@ REQ_METHODS = [
     'size',
     'depth',
     'balance',
-    'delete',
+    # 'delete',
 ]
 
 TRAVERSAL_METHODS = [
@@ -63,7 +63,7 @@ TRAVERSAL_METHODS = [
     'breadth_first',
 ]
 
-REQ_METHODS.extend(TRAVERSAL_METHODS)
+# REQ_METHODS.extend(TRAVERSAL_METHODS)
 
 BinaryTreeFixture = namedtuple(
     'BinaryTreeFixture', (
@@ -207,11 +207,11 @@ def _setup_to_delete(cases):
                 yield (sequence, item)
 
 
-def _find_swap(node, sequence):
+def _find_swap(node, sequence, instance):
     """Find the node to swap in sequence position after a deletion."""
     if not node:
         return None, None
-    if not getattr(node, LEFT_ATTR) and not getattr(node, RIGHT_ATTR):
+    if not getattr(node, LEFT_ATTR) or not getattr(node, RIGHT_ATTR):
         return None, None
     node_val = getattr(node, VAL_ATTR)
     limiter = getattr(node, PARENT_ATTR)
@@ -259,7 +259,7 @@ def _del_one_node(sequence, to_delete, instance):
     left_sequence = list(sequence)
     right_sequence = list(sequence)
     node_to_del = instance.search(to_delete)
-    swap_vals = _find_swap(node_to_del, sequence)
+    swap_vals = _find_swap(node_to_del, sequence, instance)
     if swap_vals[0] is not None or swap_vals[1] is not None:
         del_idx = sequence.index(to_delete)
         if swap_vals[0]:
@@ -278,8 +278,8 @@ def _del_multiple_nodes(right, left, to_delete, instance):
     left_sequence = list(left)
     right_sequence = list(right)
     node_to_del = instance.search(to_delete)
-    left_swap = _find_swap(node_to_del, left)
-    right_swap = _find_swap(node_to_del, right)
+    left_swap = _find_swap(node_to_del, left, instance)
+    right_swap = _find_swap(node_to_del, right, instance)
     if left_swap[0] is not None:
         del_idx = left.index(to_delete)
         left_sequence[del_idx] = left_swap[0]
@@ -363,93 +363,93 @@ def new_tree(request):
     )
 
 
-# @pytest.mark.parametrize('method_name', REQ_METHODS)
-# def test_has_method(method_name):
-#     """Test that graph has all the correct methods."""
-#     assert hasattr(ClassDef(), method_name)
+@pytest.mark.parametrize('method_name', REQ_METHODS)
+def test_has_method(method_name):
+    """Test that graph has all the correct methods."""
+    assert hasattr(ClassDef(), method_name)
 
 
-# def test_invariant(new_tree):
-#     """Check tree against the tree invariant."""
-#     assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
+def test_invariant(new_tree):
+    """Check tree against the tree invariant."""
+    assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
 
 
-# def test_invariant_after_insert(new_tree):
-#     """Check tree against the tree invariant after a new item is inserted."""
-#     new_tree.instance.insert(new_tree.to_insert)
-#     assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
+def test_invariant_after_insert(new_tree):
+    """Check tree against the tree invariant after a new item is inserted."""
+    new_tree.instance.insert(new_tree.to_insert)
+    assert _tree_checker(getattr(new_tree.instance, ROOT_ATTR))
 
 
-# def test_contains(new_tree):
-#     """Test that tree contains all items pushed into it."""
-#     assert all([new_tree.instance.contains(i) for i in new_tree.sequence])
+def test_contains(new_tree):
+    """Test that tree contains all items pushed into it."""
+    assert all([new_tree.instance.contains(i) for i in new_tree.sequence])
 
 
-# def test_contains_false(new_tree):
-#     """Test that tree contains all items pushed into it."""
-#     assert not new_tree.instance.contains(new_tree.to_insert)
+def test_contains_false(new_tree):
+    """Test that tree contains all items pushed into it."""
+    assert not new_tree.instance.contains(new_tree.to_insert)
 
 
-# def test_contains_after_insert(new_tree):
-#     """Check tree against the tree invariant after a new item is inserted."""
-#     new_tree.instance.insert(new_tree.to_insert)
-#     assert new_tree.instance.contains(new_tree.to_insert)
+def test_contains_after_insert(new_tree):
+    """Check tree against the tree invariant after a new item is inserted."""
+    new_tree.instance.insert(new_tree.to_insert)
+    assert new_tree.instance.contains(new_tree.to_insert)
 
 
-# def test_size(new_tree):
-#     """Test that size method returns the expected size."""
-#     assert new_tree.instance.size() == new_tree.size
+def test_size(new_tree):
+    """Test that size method returns the expected size."""
+    assert new_tree.instance.size() == new_tree.size
 
 
-# def test_depth(new_tree):
-#     """Test that depth method returns expected depth."""
-#     if BALANCED:
-#         assert abs(new_tree.instance.depth() - new_tree.depth) < 2
-#     else:
-#         assert new_tree.instance.depth() == new_tree.depth
+def test_depth(new_tree):
+    """Test that depth method returns expected depth."""
+    if BALANCED:
+        assert abs(new_tree.instance.depth() - new_tree.depth) < 2
+    else:
+        assert new_tree.instance.depth() == new_tree.depth
 
 
-# def test_balance(new_tree):
-#     """Test that balance method returns expected balance."""
-#     if BALANCED:
-#         assert -2 < new_tree.instance.balance() < 2
-#     else:
-#         assert new_tree.instance.balance() == new_tree.balance
+def test_balance(new_tree):
+    """Test that balance method returns expected balance."""
+    if BALANCED:
+        assert -2 < new_tree.instance.balance() < 2
+    else:
+        assert new_tree.instance.balance() == new_tree.balance
 
 
-# def test_left_overbalance(new_tree):
-#     """Test that tree becomes overbalanced to the left."""
-#     for item in new_tree.left_overbalance:
-#         new_tree.instance.insert(item)
-#     if BALANCED:
-#         assert -2 < new_tree.instance.balance() < 2
-#     else:
-#         new_sequence = []
-#         for item in new_tree.sequence:
-#             new_sequence.append(item)
-#         new_sequence += new_tree.left_overbalance
-#         assert new_tree.instance.balance() == _balance(new_sequence)
+def test_left_overbalance(new_tree):
+    """Test that tree becomes overbalanced to the left."""
+    for item in new_tree.left_overbalance:
+        new_tree.instance.insert(item)
+    if BALANCED:
+        assert -2 < new_tree.instance.balance() < 2
+    else:
+        new_sequence = []
+        for item in new_tree.sequence:
+            new_sequence.append(item)
+        new_sequence += new_tree.left_overbalance
+        assert new_tree.instance.balance() == _balance(new_sequence)
 
 
-# def test_right_overbalance(new_tree):
-#     """Test that tree becomes overbalanced to the right."""
-#     for item in new_tree.right_overbalance:
-#         new_tree.instance.insert(item)
-#     if BALANCED:
-#         assert -2 < new_tree.instance.balance() < 2
-#     else:
-#         new_sequence = []
-#         for item in new_tree.sequence:
-#             new_sequence.append(item)
-#         new_sequence += new_tree.right_overbalance
-#         assert new_tree.instance.balance() == _balance(new_sequence)
+def test_right_overbalance(new_tree):
+    """Test that tree becomes overbalanced to the right."""
+    for item in new_tree.right_overbalance:
+        new_tree.instance.insert(item)
+    if BALANCED:
+        assert -2 < new_tree.instance.balance() < 2
+    else:
+        new_sequence = []
+        for item in new_tree.sequence:
+            new_sequence.append(item)
+        new_sequence += new_tree.right_overbalance
+        assert new_tree.instance.balance() == _balance(new_sequence)
 
 
-# def test_no_duplicates(new_tree):
-#     """Test that an item cannot be inserted into the tree a second time."""
-#     new_tree.instance.insert(new_tree.to_insert)
-#     new_tree.instance.insert(new_tree.to_insert)
-#     assert new_tree.instance.size() == new_tree.size + 1
+def test_no_duplicates(new_tree):
+    """Test that an item cannot be inserted into the tree a second time."""
+    new_tree.instance.insert(new_tree.to_insert)
+    new_tree.instance.insert(new_tree.to_insert)
+    assert new_tree.instance.size() == new_tree.size + 1
 
 
 # # Traversal tests
@@ -564,25 +564,25 @@ def new_tree(request):
 #         assert new_tree.instance.depth() == depth
 
 
-def test_balance_after_delete_half(new_tree):
-    """Test that tree balance is good after deletion of many items."""
-    if not BALANCED and not new_tree.size:
-        pytest.skip()
-    right_sequence = list(new_tree.sequence)
-    left_sequence = list(new_tree.sequence)
-    for i in new_tree.to_delete_half:
-        right_sequence, left_sequence = _del_multiple_nodes(right_sequence,
-                                                            left_sequence,
-                                                            i,
-                                                            new_tree.instance)
-        new_tree.instance.delete(i)
-    if BALANCED:
-        assert -2 < new_tree.instance.balance() < 2
-    else:
-        right_balance = _balance(right_sequence)
-        left_balance = _balance(left_sequence)
-        assert (new_tree.instance.balance() == right_balance or
-                new_tree.instance.balance() == left_balance)
+# def test_balance_after_delete_half(new_tree):
+#     """Test that tree balance is good after deletion of many items."""
+#     if not BALANCED and not new_tree.size:
+#         pytest.skip()
+#     right_sequence = list(new_tree.sequence)
+#     left_sequence = list(new_tree.sequence)
+#     for i in new_tree.to_delete_half:
+#         right_sequence, left_sequence = _del_multiple_nodes(right_sequence,
+#                                                             left_sequence,
+#                                                             i,
+#                                                             new_tree.instance)
+#         new_tree.instance.delete(i)
+#     if BALANCED:
+#         assert -2 < new_tree.instance.balance() < 2
+#     else:
+#         right_balance = _balance(right_sequence)
+#         left_balance = _balance(left_sequence)
+#         assert (new_tree.instance.balance() == right_balance or
+#                 new_tree.instance.balance() == left_balance)
 
 
 # # Balancing Tests
